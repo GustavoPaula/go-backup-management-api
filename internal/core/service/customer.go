@@ -35,7 +35,7 @@ func (cs *CustomerService) CreateCustomer(ctx context.Context, customer *domain.
 	return customer, nil
 }
 
-func (cs *CustomerService) GetCustomerByID(ctx context.Context, id string) (*domain.Customer, error) {
+func (cs *CustomerService) GetCustomer(ctx context.Context, id string) (*domain.Customer, error) {
 	var customer *domain.Customer
 
 	customer, err := cs.repo.GetCustomerByID(ctx, id)
