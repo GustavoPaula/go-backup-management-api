@@ -21,6 +21,9 @@ func NewUserService(repo port.UserRepository) *UserService {
 func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
 	existingUser, err := us.repo.GetUserByEmail(ctx, user.Email)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
 		return nil, domain.ErrInternal
 	}
 
@@ -30,6 +33,9 @@ func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain
 
 	existingUser, err = us.repo.GetUserByUsername(ctx, user.Username)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
 		return nil, domain.ErrInternal
 	}
 
@@ -56,6 +62,9 @@ func (us *UserService) GetUser(ctx context.Context, id string) (*domain.User, er
 
 	user, err := us.repo.GetUserByID(ctx, id)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
 		return nil, domain.ErrInternal
 	}
 
@@ -76,6 +85,9 @@ func (us *UserService) ListUsers(ctx context.Context, page, limit string) ([]dom
 func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	existingUser, err := us.repo.GetUserByID(ctx, user.ID)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
 		return nil, domain.ErrInternal
 	}
 
@@ -89,7 +101,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 
 	updateUser, err := us.repo.UpdateUser(ctx, user)
 	if err != nil {
-		return nil, err
+		return nil, domain.ErrInternal
 	}
 
 	return updateUser, nil
@@ -98,6 +110,9 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 func (us *UserService) DeleteUser(ctx context.Context, id string) error {
 	existingUser, err := us.repo.GetUserByID(ctx, id)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return err
+		}
 		return domain.ErrInternal
 	}
 

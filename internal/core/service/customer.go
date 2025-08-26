@@ -20,6 +20,9 @@ func NewCustomerService(repo port.CustomerRepository) *CustomerService {
 func (cs *CustomerService) CreateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
 	existingCustomer, err := cs.repo.GetCustomerByName(ctx, customer.Name)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
 		return nil, domain.ErrInternal
 	}
 
@@ -40,6 +43,9 @@ func (cs *CustomerService) GetCustomer(ctx context.Context, id string) (*domain.
 
 	customer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
 		return nil, domain.ErrInternal
 	}
 
@@ -60,6 +66,9 @@ func (cs *CustomerService) ListCustomers(ctx context.Context, page, limit int64)
 func (cs *CustomerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, customer.ID)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
 		return nil, domain.ErrInternal
 	}
 
@@ -78,14 +87,13 @@ func (cs *CustomerService) UpdateCustomer(ctx context.Context, customer *domain.
 func (cs *CustomerService) DeleteCustomer(ctx context.Context, id string) error {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return err
+		}
 		return domain.ErrInternal
 	}
 
-	if existingCustomer != nil {
-		return domain.ErrDataNotFound
-	}
-
-	err = cs.repo.DeleteCustomer(ctx, id)
+	err = cs.repo.DeleteCustomer(ctx, existingCustomer.ID)
 	if err != nil {
 		return domain.ErrInternal
 	}

@@ -93,11 +93,16 @@ func (ds *DeviceService) UpdateDevice(ctx context.Context, device *domain.Device
 }
 
 func (ds *DeviceService) DeleteDevice(ctx context.Context, id string) error {
-	err := ds.deviceRepo.DeleteDevice(ctx, id)
+	existingDevice, err := ds.deviceRepo.GetDeviceByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return err
 		}
+		return domain.ErrInternal
+	}
+
+	err = ds.deviceRepo.DeleteDevice(ctx, existingDevice.ID)
+	if err != nil {
 		return domain.ErrInternal
 	}
 
