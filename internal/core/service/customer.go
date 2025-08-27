@@ -7,17 +7,17 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 )
 
-type CustomerService struct {
+type customerService struct {
 	repo port.CustomerRepository
 }
 
-func NewCustomerService(repo port.CustomerRepository) *CustomerService {
-	return &CustomerService{
+func NewCustomerService(repo port.CustomerRepository) *customerService {
+	return &customerService{
 		repo,
 	}
 }
 
-func (cs *CustomerService) CreateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
+func (cs *customerService) CreateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
 	existingCustomer, err := cs.repo.GetCustomerByName(ctx, customer.Name)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -38,7 +38,7 @@ func (cs *CustomerService) CreateCustomer(ctx context.Context, customer *domain.
 	return customer, nil
 }
 
-func (cs *CustomerService) GetCustomer(ctx context.Context, id string) (*domain.Customer, error) {
+func (cs *customerService) GetCustomer(ctx context.Context, id string) (*domain.Customer, error) {
 	var customer *domain.Customer
 
 	customer, err := cs.repo.GetCustomerByID(ctx, id)
@@ -52,7 +52,7 @@ func (cs *CustomerService) GetCustomer(ctx context.Context, id string) (*domain.
 	return customer, nil
 }
 
-func (cs *CustomerService) ListCustomers(ctx context.Context, page, limit int64) ([]domain.Customer, error) {
+func (cs *customerService) ListCustomers(ctx context.Context, page, limit int64) ([]domain.Customer, error) {
 	var customers []domain.Customer
 
 	customers, err := cs.repo.ListCustomers(ctx, page, limit)
@@ -63,7 +63,7 @@ func (cs *CustomerService) ListCustomers(ctx context.Context, page, limit int64)
 	return customers, nil
 }
 
-func (cs *CustomerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
+func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, customer.ID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -84,7 +84,7 @@ func (cs *CustomerService) UpdateCustomer(ctx context.Context, customer *domain.
 	return updateCustomer, nil
 }
 
-func (cs *CustomerService) DeleteCustomer(ctx context.Context, id string) error {
+func (cs *customerService) DeleteCustomer(ctx context.Context, id string) error {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {

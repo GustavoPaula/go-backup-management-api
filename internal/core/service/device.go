@@ -7,19 +7,19 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 )
 
-type DeviceService struct {
+type deviceService struct {
 	deviceRepo   port.DeviceRepository
 	customerRepo port.CustomerRepository
 }
 
-func NewDeviceService(deviceRepo port.DeviceRepository, customerRepo port.CustomerRepository) *DeviceService {
-	return &DeviceService{
+func NewDeviceService(deviceRepo port.DeviceRepository, customerRepo port.CustomerRepository) *deviceService {
+	return &deviceService{
 		deviceRepo,
 		customerRepo,
 	}
 }
 
-func (ds *DeviceService) CreateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
+func (ds *deviceService) CreateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
 	customer, err := ds.customerRepo.GetCustomerByID(ctx, device.CustomerID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -38,7 +38,7 @@ func (ds *DeviceService) CreateDevice(ctx context.Context, device *domain.Device
 	return device, nil
 }
 
-func (ds *DeviceService) GetDevice(ctx context.Context, id string) (*domain.Device, error) {
+func (ds *deviceService) GetDevice(ctx context.Context, id string) (*domain.Device, error) {
 	device, err := ds.deviceRepo.GetDeviceByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -50,7 +50,7 @@ func (ds *DeviceService) GetDevice(ctx context.Context, id string) (*domain.Devi
 	return device, nil
 }
 
-func (ds *DeviceService) ListDevices(ctx context.Context, page, limit int64) ([]domain.Device, error) {
+func (ds *deviceService) ListDevices(ctx context.Context, page, limit int64) ([]domain.Device, error) {
 	var devices []domain.Device
 
 	devices, err := ds.deviceRepo.ListDevices(ctx, page, limit)
@@ -61,7 +61,7 @@ func (ds *DeviceService) ListDevices(ctx context.Context, page, limit int64) ([]
 	return devices, nil
 }
 
-func (ds *DeviceService) UpdateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
+func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
 	existingDevice, err := ds.deviceRepo.GetDeviceByID(ctx, device.ID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -92,7 +92,7 @@ func (ds *DeviceService) UpdateDevice(ctx context.Context, device *domain.Device
 	return updateDevice, nil
 }
 
-func (ds *DeviceService) DeleteDevice(ctx context.Context, id string) error {
+func (ds *deviceService) DeleteDevice(ctx context.Context, id string) error {
 	existingDevice, err := ds.deviceRepo.GetDeviceByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {

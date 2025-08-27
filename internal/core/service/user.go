@@ -8,17 +8,17 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
 )
 
-type UserService struct {
+type userService struct {
 	repo port.UserRepository
 }
 
-func NewUserService(repo port.UserRepository) *UserService {
-	return &UserService{
+func NewUserService(repo port.UserRepository) *userService {
+	return &userService{
 		repo,
 	}
 }
 
-func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (us *userService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
 	existingUser, err := us.repo.GetUserByEmail(ctx, user.Email)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -57,7 +57,7 @@ func (us *UserService) Register(ctx context.Context, user *domain.User) (*domain
 	return user, nil
 }
 
-func (us *UserService) GetUser(ctx context.Context, id string) (*domain.User, error) {
+func (us *userService) GetUser(ctx context.Context, id string) (*domain.User, error) {
 	var user *domain.User
 
 	user, err := us.repo.GetUserByID(ctx, id)
@@ -71,7 +71,7 @@ func (us *UserService) GetUser(ctx context.Context, id string) (*domain.User, er
 	return user, nil
 }
 
-func (us *UserService) ListUsers(ctx context.Context, page, limit string) ([]domain.User, error) {
+func (us *userService) ListUsers(ctx context.Context, page, limit string) ([]domain.User, error) {
 	var users []domain.User
 
 	users, err := us.repo.ListUsers(ctx, page, limit)
@@ -82,7 +82,7 @@ func (us *UserService) ListUsers(ctx context.Context, page, limit string) ([]dom
 	return users, nil
 }
 
-func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	existingUser, err := us.repo.GetUserByID(ctx, user.ID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
@@ -107,7 +107,7 @@ func (us *UserService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 	return updateUser, nil
 }
 
-func (us *UserService) DeleteUser(ctx context.Context, id string) error {
+func (us *userService) DeleteUser(ctx context.Context, id string) error {
 	existingUser, err := us.repo.GetUserByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
