@@ -12,7 +12,7 @@ type deviceService struct {
 	customerRepo port.CustomerRepository
 }
 
-func NewDeviceService(deviceRepo port.DeviceRepository, customerRepo port.CustomerRepository) *deviceService {
+func NewDeviceService(deviceRepo port.DeviceRepository, customerRepo port.CustomerRepository) port.DeviceService {
 	return &deviceService{
 		deviceRepo,
 		customerRepo,

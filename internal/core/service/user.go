@@ -12,7 +12,7 @@ type userService struct {
 	repo port.UserRepository
 }
 
-func NewUserService(repo port.UserRepository) *userService {
+func NewUserService(repo port.UserRepository) port.UserService {
 	return &userService{
 		repo,
 	}
@@ -71,7 +71,7 @@ func (us *userService) GetUser(ctx context.Context, id string) (*domain.User, er
 	return user, nil
 }
 
-func (us *userService) ListUsers(ctx context.Context, page, limit string) ([]domain.User, error) {
+func (us *userService) ListUsers(ctx context.Context, page, limit int64) ([]domain.User, error) {
 	var users []domain.User
 
 	users, err := us.repo.ListUsers(ctx, page, limit)
