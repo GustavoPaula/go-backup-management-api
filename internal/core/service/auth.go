@@ -1,0 +1,43 @@
+package service
+
+import (
+	"context"
+
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
+)
+
+type authService struct {
+	userRepo port.UserRepository
+	authRepo port.AuthRepository
+}
+
+func NewAuthService(userRepo port.UserRepository, authRepo port.AuthRepository) port.AuthService {
+	return &authService{
+		userRepo,
+		authRepo,
+	}
+}
+
+func (as *authService) Login(ctx context.Context, username, password string) (string, error) {
+	user, err := as.userRepo.GetUserByUsername(ctx, username)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return "", err
+		}
+		return "", domain.ErrInternal
+	}
+
+	err = util.VerifyPassword(password, user.PasswordHash)
+	if err != nil {
+		return "", domain.ErrInvalidCredentials
+	}
+
+	accessToken, err := as.authRepo.CreateToken(user)
+	if err != nil {
+		return "", domain.ErrTokenCreation
+	}
+
+	return accessToken, nil
+}
