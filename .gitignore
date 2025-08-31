@@ -1,2 +1,5 @@
 # Variáveis de ambiente
 .env
+
+# Dados do PostgreSQL
+db
