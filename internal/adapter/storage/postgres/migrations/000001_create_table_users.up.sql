@@ -1,7 +1,7 @@
 CREATE TYPE "users_role_enum" AS ENUM ('admin', 'member');
 
 CREATE TABLE "users" (
-    "id" uuid  PRIMARY KEY NOT NULL  DEFAULT gen_random_uuid(),,
+    "id" uuid  PRIMARY KEY NOT NULL  DEFAULT gen_random_uuid(),
     "email" varchar NOT NULL,
     "username" varchar NOT NULL,
     "password" varchar NOT NULL,

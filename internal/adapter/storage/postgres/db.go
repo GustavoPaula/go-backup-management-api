@@ -12,7 +12,11 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func Connection(ctx context.Context, config *config.DB) (*pgxpool.Pool, error) {
+type DB struct {
+	*pgxpool.Pool
+}
+
+func New(ctx context.Context, config *config.DB) (*DB, error) {
 	connString := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		config.User,
@@ -43,5 +47,7 @@ func Connection(ctx context.Context, config *config.DB) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
-	return db, nil
+	return &DB{
+		db,
+	}, nil
 }

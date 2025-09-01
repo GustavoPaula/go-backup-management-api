@@ -26,7 +26,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	_, err = postgres.Connection(ctx, config.DB)
+	_, err = postgres.New(ctx, config.DB)
 	if err != nil {
 		os.Exit(1)
 	}
