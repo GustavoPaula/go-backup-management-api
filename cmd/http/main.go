@@ -13,9 +13,11 @@ import (
 )
 
 func main() {
+	// Set logger
 	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(log)
 
+	// Carregando as variáveis de ambiente
 	config, err := config.New()
 	if err != nil {
 		slog.Error("Erro ao carregar as variáveis de ambiente", "error", err)
@@ -26,15 +28,18 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
+	// Carregando as configurações do banco de dados
 	_, err = postgres.New(ctx, config.DB)
 	if err != nil {
 		os.Exit(1)
 	}
 
-	srv := http.NewServer(config.HTTP.Port)
-	srv.Routes()
+	// Injeção de Dependência
+	healthyHandler := http.NewHealthyHandler()
 
-	if err := srv.Start(ctx); err != nil {
+	r := http.NewRouter(*healthyHandler)
+
+	if err := r.Serve(ctx, config.HTTP); err != nil {
 		slog.Error("Erro ao iniciar o servidor HTTP", "error", err)
 		return
 	}
