@@ -19,26 +19,12 @@ func NewUserService(repo port.UserRepository) port.UserService {
 }
 
 func (us *userService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
-	existingUser, err := us.repo.GetUserByEmail(ctx, user.Email)
-	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
-	}
-
+	existingUser, _ := us.repo.GetUserByEmail(ctx, user.Email)
 	if existingUser != nil {
 		return nil, domain.ErrConflictingData
 	}
 
-	existingUser, err = us.repo.GetUserByUsername(ctx, user.Username)
-	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
-	}
-
+	existingUser, _ = us.repo.GetUserByUsername(ctx, user.Username)
 	if existingUser != nil {
 		return nil, domain.ErrConflictingData
 	}

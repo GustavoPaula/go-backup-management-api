@@ -10,6 +10,8 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/config"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/handler/http"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres/repository"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/service"
 )
 
 func main() {
@@ -26,14 +28,20 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
 	defer cancel()
 
-	_, err = postgres.New(ctx, config.DB)
+	db, err := postgres.New(ctx, config.DB)
 	if err != nil {
+		slog.Error("Erro ao iniciar a conexão com o banco de dados", "error", err)
 		os.Exit(1)
 	}
+	defer db.Close()
 
 	healthyHandler := http.NewHealthyHandler()
 
-	router := http.NewRouter(*healthyHandler)
+	userRepo := repository.NewUserRepository(db)
+	userSvc := service.NewUserService(userRepo)
+	userHandler := http.NewUserHandler(userSvc)
+
+	router := http.NewRouter(*healthyHandler, *userHandler)
 
 	if err := router.Serve(ctx, config.HTTP); err != nil {
 		slog.Error("Erro ao iniciar o servidor HTTP", "error", err)

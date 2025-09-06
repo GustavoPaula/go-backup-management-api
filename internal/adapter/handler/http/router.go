@@ -19,6 +19,7 @@ type router struct {
 
 func NewRouter(
 	healthyHandler healthyHandler,
+	userHandler userHandler,
 ) *router {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
@@ -32,6 +33,8 @@ func NewRouter(
 	r.Use(middleware.RequestID, middleware.Recoverer)
 
 	r.Get("/healthy", healthyHandler.Healthy)
+
+	r.Post("/register", userHandler.Register)
 
 	return &router{
 		r,

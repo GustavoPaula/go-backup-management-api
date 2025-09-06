@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"time"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
@@ -27,7 +28,7 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) (*d
 		RETURNING id, username, email, password, role, created_at, updated_at
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash, user.Role, user.CreatedAt, user.UpdatedAt).
+	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash, user.Role, time.Now(), time.Now()).
 		Scan(
 			&user.ID,
 			&user.Username,
@@ -71,7 +72,7 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id string) (*domain.U
 	)
 
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
 		return nil, err
@@ -118,7 +119,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 		WHERE email = $1
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.Email).Scan(
+	err := ur.db.QueryRow(ctx, query, email).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
@@ -138,7 +139,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 	return &user, nil
 }
 
-func (ur *userRepository) ListUsers(ctx context.Context, page, limit uint64) ([]domain.User, error) {
+func (ur *userRepository) ListUsers(ctx context.Context, page, limit int64) ([]domain.User, error) {
 	var user domain.User
 	var users []domain.User
 	offset := (page - 1) * limit

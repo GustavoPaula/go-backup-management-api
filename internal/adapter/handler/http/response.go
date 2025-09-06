@@ -5,19 +5,37 @@ import (
 	"net/http"
 )
 
-type JSONResponse struct {
-	Data  interface{} `json:"data,omitempty"`
-	Error string      `json:"error,omitempty"`
+type ErrorResponse struct {
+	Error string `json:"error"`
 }
 
-func WriteJSON(w http.ResponseWriter, status int, payload JSONResponse) {
+type SucessResponse struct {
+}
+
+func ok(w http.ResponseWriter, payload any) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(payload)
 }
 
-func ok(w http.ResponseWriter, data interface{}) {
-	WriteJSON(w, http.StatusOK, JSONResponse{
-		Data: data,
-	})
+func created(w http.ResponseWriter, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(payload)
+}
+
+func badRequest(w http.ResponseWriter, payload error) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusBadRequest)
+	response := ErrorResponse{
+		Error: payload.Error(),
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+func internalServerError(w http.ResponseWriter, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	json.NewEncoder(w).Encode(payload)
 }
