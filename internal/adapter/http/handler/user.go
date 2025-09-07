@@ -1,4 +1,4 @@
-package http
+package handler
 
 import (
 	"encoding/json"
@@ -9,12 +9,12 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 )
 
-type userHandler struct {
+type UserHandler struct {
 	svc port.UserService
 }
 
-func NewUserHandler(svc port.UserService) *userHandler {
-	return &userHandler{
+func NewUserHandler(svc port.UserService) *UserHandler {
+	return &UserHandler{
 		svc,
 	}
 }
@@ -35,7 +35,7 @@ type registerResponse struct {
 	UpdatedAt time.Time       `json:"updated_at,omitzero"`
 }
 
-func (uh *userHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "Erro ao fazer o parser para JSON", http.StatusInternalServerError)

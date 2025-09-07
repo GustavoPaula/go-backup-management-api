@@ -1,4 +1,4 @@
-package http
+package router
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/config"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/handler"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -18,8 +19,8 @@ type router struct {
 }
 
 func NewRouter(
-	healthyHandler healthyHandler,
-	userHandler userHandler,
+	healthyHandler handler.HealthyHandler,
+	userHandler handler.UserHandler,
 ) *router {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{

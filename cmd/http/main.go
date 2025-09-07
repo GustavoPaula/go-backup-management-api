@@ -8,7 +8,8 @@ import (
 	"syscall"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/config"
-	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/handler/http"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/handler"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/router"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres/repository"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/service"
@@ -35,13 +36,13 @@ func main() {
 	}
 	defer db.Close()
 
-	healthyHandler := http.NewHealthyHandler()
+	healthyHandler := handler.NewHealthyHandler()
 
 	userRepo := repository.NewUserRepository(db)
 	userSvc := service.NewUserService(userRepo)
-	userHandler := http.NewUserHandler(userSvc)
+	userHandler := handler.NewUserHandler(userSvc)
 
-	router := http.NewRouter(*healthyHandler, *userHandler)
+	router := router.NewRouter(*healthyHandler, *userHandler)
 
 	if err := router.Serve(ctx, config.HTTP); err != nil {
 		slog.Error("Erro ao iniciar o servidor HTTP", "error", err)
