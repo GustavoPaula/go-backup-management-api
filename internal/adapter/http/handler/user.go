@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 )
@@ -53,18 +54,18 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrConflictingData:
-			badRequest(w, domain.ErrConflictingData)
+			response.Error(w, http.StatusBadRequest, err.Error())
 			return
 		case domain.ErrDataNotFound:
-			badRequest(w, domain.ErrDataNotFound)
+			response.Error(w, http.StatusBadRequest, err.Error())
 			return
 		default:
-			internalServerError(w, domain.ErrInternal)
+			response.Error(w, http.StatusInternalServerError, err.Error())
 			return
 		}
 	}
 
-	response := registerResponse{
+	res := registerResponse{
 		ID:        newUser.ID,
 		Username:  newUser.Username,
 		Email:     newUser.Email,
@@ -73,5 +74,5 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: newUser.UpdatedAt,
 	}
 
-	created(w, response)
+	response.Success(w, http.StatusCreated, "usuário criado com sucesso!", res)
 }

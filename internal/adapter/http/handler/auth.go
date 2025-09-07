@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 )
 
@@ -26,13 +27,13 @@ type loginRequest struct {
 func (ah *authHandler) Login(w http.ResponseWriter, r *http.Response) {
 	var body loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Erro ao fazer o parser para JSON", http.StatusBadRequest)
+		response.Error(w, http.StatusInternalServerError, err.Error())
 	}
 
 	token, err := ah.svc.Login(context.Background(), body.Username, body.Password)
 	if err != nil {
-		http.Error(w, "Erro ao gerar token", http.StatusUnauthorized)
+		response.Error(w, http.StatusUnauthorized, err.Error())
 	}
 
-	ok(w, token)
+	response.Success(w, http.StatusOK, "autenticado com sucesso", token)
 }

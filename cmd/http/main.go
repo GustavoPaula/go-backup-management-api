@@ -36,7 +36,7 @@ func main() {
 	}
 	defer db.Close()
 
-	healthyHandler := handler.NewHealthyHandler()
+	healthyHandler := handler.NewHealthCheckHandler()
 
 	userRepo := repository.NewUserRepository(db)
 	userSvc := service.NewUserService(userRepo)

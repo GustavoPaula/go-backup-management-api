@@ -1,13 +1,17 @@
 package handler
 
-import "net/http"
+import (
+	"net/http"
 
-type HealthyHandler struct{}
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
+)
 
-func NewHealthyHandler() *HealthyHandler {
-	return &HealthyHandler{}
+type HealthCheckHandler struct{}
+
+func NewHealthCheckHandler() *HealthCheckHandler {
+	return &HealthCheckHandler{}
 }
 
-func (h *HealthyHandler) Healthy(w http.ResponseWriter, r *http.Request) {
-	ok(w, "API em produção")
+func (h *HealthCheckHandler) Health(w http.ResponseWriter, r *http.Request) {
+	response.Success(w, http.StatusOK, "ok", "api está saudável")
 }

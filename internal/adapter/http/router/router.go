@@ -19,7 +19,7 @@ type router struct {
 }
 
 func NewRouter(
-	healthyHandler handler.HealthyHandler,
+	healthyHandler handler.HealthCheckHandler,
 	userHandler handler.UserHandler,
 ) *router {
 	r := chi.NewRouter()
@@ -33,7 +33,7 @@ func NewRouter(
 	}))
 	r.Use(middleware.RequestID, middleware.Recoverer)
 
-	r.Get("/healthy", healthyHandler.Healthy)
+	r.Get("/healthy", healthyHandler.Health)
 
 	r.Post("/register", userHandler.Register)
 
