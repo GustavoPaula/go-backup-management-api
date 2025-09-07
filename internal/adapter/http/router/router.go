@@ -9,6 +9,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/config"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/handler"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -19,8 +20,10 @@ type router struct {
 }
 
 func NewRouter(
+	token port.TokenService,
 	healthyHandler handler.HealthCheckHandler,
 	userHandler handler.UserHandler,
+	authHandler handler.AuthHandler,
 ) *router {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
@@ -33,9 +36,14 @@ func NewRouter(
 	}))
 	r.Use(middleware.RequestID, middleware.Recoverer)
 
-	r.Get("/healthy", healthyHandler.Health)
+	// Rota de Health
+	r.Get("/health", healthyHandler.Health)
 
-	r.Post("/register", userHandler.Register)
+	// Rotas de usuários
+	r.Group(func(r chi.Router) {
+		r.Post("/register", userHandler.Register)
+		r.Post("/login", authHandler.Login)
+	})
 
 	return &router{
 		r,

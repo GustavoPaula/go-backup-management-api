@@ -6,24 +6,27 @@ import (
 	"github.com/joho/godotenv"
 )
 
-type (
-	Config struct {
-		DB   *DB
-		HTTP *HTTP
-	}
+type Config struct {
+	DB    *DB
+	HTTP  *HTTP
+	Token *Token
+}
 
-	DB struct {
-		User string
-		Pass string
-		Host string
-		Port string
-		Name string
-	}
+type DB struct {
+	User string
+	Pass string
+	Host string
+	Port string
+	Name string
+}
 
-	HTTP struct {
-		Port string
-	}
-)
+type HTTP struct {
+	Port string
+}
+
+type Token struct {
+	Duration string
+}
 
 func New() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
@@ -42,8 +45,13 @@ func New() (*Config, error) {
 		Port: os.Getenv("HTTP_PORT"),
 	}
 
+	token := &Token{
+		Duration: os.Getenv("TOKEN_DURATION"),
+	}
+
 	return &Config{
 		db,
 		http,
+		token,
 	}, nil
 }

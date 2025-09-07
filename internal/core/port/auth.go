@@ -6,7 +6,7 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 )
 
-type AuthRepository interface {
+type TokenService interface {
 	CreateToken(user *domain.User) (string, error)
 	VerifyToken(token string) (*domain.TokenPayload, error)
 }

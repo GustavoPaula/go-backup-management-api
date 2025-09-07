@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/auth/paseto"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/config"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/handler"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/router"
@@ -36,13 +37,27 @@ func main() {
 	}
 	defer db.Close()
 
+	token, err := paseto.New(config.Token)
+	if err != nil {
+		slog.Error("Erro ao iniciar o serviço do token", "error", err)
+		os.Exit(1)
+	}
+
 	healthyHandler := handler.NewHealthCheckHandler()
 
 	userRepo := repository.NewUserRepository(db)
 	userSvc := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userSvc)
 
-	router := router.NewRouter(*healthyHandler, *userHandler)
+	authService := service.NewAuthService(userRepo, token)
+	authHandler := handler.NewAuthHandler(authService)
+
+	router := router.NewRouter(
+		token,
+		*healthyHandler,
+		*userHandler,
+		*authHandler,
+	)
 
 	if err := router.Serve(ctx, config.HTTP); err != nil {
 		slog.Error("Erro ao iniciar o servidor HTTP", "error", err)

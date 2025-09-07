@@ -90,7 +90,7 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 		WHERE username = $1
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.Email).Scan(
+	err := ur.db.QueryRow(ctx, query, username).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
