@@ -61,7 +61,7 @@ func (r *router) Serve(ctx context.Context, cfg *config.HTTP) error {
 
 	defer func() {
 		const timeout = 30 * time.Second
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
