@@ -5,7 +5,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
-	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
+	"github.com/GustavoPaula/go-backup-management-api/pkg/crypto"
 )
 
 type userService struct {
@@ -29,7 +29,7 @@ func (us *userService) Register(ctx context.Context, user *domain.User) (*domain
 		return nil, domain.ErrConflictingData
 	}
 
-	hashedPassword, err := util.HashPassword(user.PasswordHash)
+	hashedPassword, err := crypto.HashPassword(user.PasswordHash)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}

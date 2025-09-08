@@ -5,7 +5,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
-	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
+	"github.com/GustavoPaula/go-backup-management-api/pkg/crypto"
 )
 
 type authService struct {
@@ -29,7 +29,7 @@ func (as *authService) Login(ctx context.Context, username, password string) (st
 		return "", domain.ErrInternal
 	}
 
-	err = util.VerifyPassword(password, user.PasswordHash)
+	err = crypto.VerifyPassword(password, user.PasswordHash)
 	if err != nil {
 		return "", domain.ErrInvalidCredentials
 	}

@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/pkg/response"
 )
 
 type UserHandler struct {
@@ -39,7 +39,7 @@ type registerResponse struct {
 func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var body registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "Erro ao fazer o parser para JSON", http.StatusInternalServerError)
+		response.JSON(w, http.StatusInternalServerError, "algo deu errado", err.Error())
 		return
 	}
 
@@ -54,13 +54,13 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrConflictingData:
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", err.Error())
 			return
 		case domain.ErrDataNotFound:
-			response.Error(w, http.StatusBadRequest, err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", err.Error())
 			return
 		default:
-			response.Error(w, http.StatusInternalServerError, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "algo deu errado", err.Error())
 			return
 		}
 	}
@@ -74,5 +74,5 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: newUser.UpdatedAt,
 	}
 
-	response.Success(w, http.StatusCreated, "usuário criado com sucesso!", res)
+	response.JSON(w, http.StatusCreated, "usuário criado com sucesso!", res)
 }
