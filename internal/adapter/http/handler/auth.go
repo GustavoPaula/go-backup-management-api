@@ -7,6 +7,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/GustavoPaula/go-backup-management-api/pkg/response"
+	"github.com/GustavoPaula/go-backup-management-api/pkg/validator"
 )
 
 type AuthHandler struct {
@@ -27,13 +28,23 @@ type loginRequest struct {
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "json inválido", nil, err.Error())
+		return
+	}
+
+	if err := validator.UsernameValidate(body.Username); err != nil {
+		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		return
+	}
+
+	if err := validator.PasswordValidate(body.Password); err != nil {
+		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
 		return
 	}
 
 	token, err := ah.svc.Login(context.Background(), body.Username, body.Password)
 	if err != nil {
-		response.JSON(w, http.StatusUnauthorized, "sem permissão", nil, err.Error())
+		response.JSON(w, http.StatusUnauthorized, "falha ao fazer login", nil, err.Error())
 		return
 	}
 

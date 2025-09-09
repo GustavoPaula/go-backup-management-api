@@ -9,6 +9,7 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/GustavoPaula/go-backup-management-api/pkg/response"
+	"github.com/GustavoPaula/go-backup-management-api/pkg/validator"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -30,18 +31,33 @@ type registerRequest struct {
 }
 
 type registerResponse struct {
-	ID        string          `json:"id,omitempty"`
-	Username  string          `json:"username,omitempty"`
-	Email     string          `json:"email,omitempty"`
+	ID        string          `json:"id"`
+	Username  string          `json:"username"`
+	Email     string          `json:"email"`
 	Role      domain.UserRole `json:"role"`
-	CreatedAt time.Time       `json:"created_at,omitzero"`
-	UpdatedAt time.Time       `json:"updated_at,omitzero"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
 func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+		return
+	}
+
+	if err := validator.UsernameValidate(req.Username); err != nil {
+		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		return
+	}
+
+	if err := validator.PasswordValidate(req.Password); err != nil {
+		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		return
+	}
+
+	if err := validator.EmailValidate(req.Email); err != nil {
+		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
 		return
 	}
 
