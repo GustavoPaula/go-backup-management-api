@@ -16,7 +16,7 @@ INSERT INTO users (id, email, username, password, role, created_at, updated_at)
 VALUES (
   gen_random_uuid(), 
   'admin@admin.com', 
-  'ADMIN', 
+  'admin', 
   '$2a$14$R704Gt1pYcL2X/8KAqqsvO8HnGm13DVo3HILfcZSxavsUxIQG6mo2', 
   'admin', 
   current_timestamp,

@@ -61,7 +61,7 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id string) (*domain.U
 		WHERE id = $1
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.ID).Scan(
+	err := ur.db.QueryRow(ctx, query, id).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
@@ -139,16 +139,15 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 	return &user, nil
 }
 
-func (ur *userRepository) ListUsers(ctx context.Context, page, limit int64) ([]domain.User, error) {
+func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]domain.User, error) {
 	var user domain.User
 	var users []domain.User
 	offset := (page - 1) * limit
 
 	query := `
-		SELECT id, username, email, role, created_at, updated_at
+		SELECT id, email, username, password, role, created_at, updated_at
 		FROM users
-		WHERE deleted_at is null
-		ORDER BY name
+		ORDER BY username
 		LIMIT $1 OFFSET $2
 	`
 
@@ -162,8 +161,8 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int64) ([]d
 	for rows.Next() {
 		err := rows.Scan(
 			&user.ID,
-			&user.Username,
 			&user.Email,
+			&user.Username,
 			&user.PasswordHash,
 			&user.Role,
 			&user.CreatedAt,
@@ -184,10 +183,10 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) (*d
 		UPDATE users
 		SET username = $1, email = $2, password = $3, role = $4, updated_at = $5
 		WHERE id = $6
-		RETURNING id, name, email, password, role, created_at, updated_at
+		RETURNING id, username, email, password, role, created_at, updated_at
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash, user.Role, user.UpdatedAt, user.ID).Scan(
+	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash, user.Role, time.Now(), user.ID).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,

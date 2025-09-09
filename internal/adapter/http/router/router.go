@@ -43,6 +43,9 @@ func NewRouter(
 	r.Group(func(r chi.Router) {
 		r.Post("/register", userHandler.Register)
 		r.Post("/login", authHandler.Login)
+		r.Get("/users/{id}", userHandler.GetUser)
+		r.Get("/users", userHandler.ListUsers)
+		r.Put("/users/{id}", userHandler.UpdateUser)
 	})
 
 	return &router{

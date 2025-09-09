@@ -57,7 +57,7 @@ func (us *userService) GetUser(ctx context.Context, id string) (*domain.User, er
 	return user, nil
 }
 
-func (us *userService) ListUsers(ctx context.Context, page, limit int64) ([]domain.User, error) {
+func (us *userService) ListUsers(ctx context.Context, page, limit int) ([]domain.User, error) {
 	var users []domain.User
 
 	users, err := us.repo.ListUsers(ctx, page, limit)
@@ -83,6 +83,14 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 
 	if user.Username == "" {
 		user.Username = existingUser.Username
+	}
+
+	if user.PasswordHash == "" {
+		user.PasswordHash = existingUser.PasswordHash
+	}
+
+	if user.Role == "" {
+		user.Role = existingUser.Role
 	}
 
 	updateUser, err := us.repo.UpdateUser(ctx, user)
