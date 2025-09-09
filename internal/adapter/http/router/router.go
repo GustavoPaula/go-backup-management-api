@@ -46,6 +46,7 @@ func NewRouter(
 		r.Get("/users/{id}", userHandler.GetUser)
 		r.Get("/users", userHandler.ListUsers)
 		r.Put("/users/{id}", userHandler.UpdateUser)
+		r.Delete("/users/{id}", userHandler.DeleteUser)
 	})
 
 	return &router{

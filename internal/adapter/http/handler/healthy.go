@@ -13,5 +13,5 @@ func NewHealthCheckHandler() *HealthCheckHandler {
 }
 
 func (h *HealthCheckHandler) Health(w http.ResponseWriter, r *http.Request) {
-	response.JSON(w, http.StatusOK, "ok", "api está saudável")
+	response.JSON(w, http.StatusOK, "ok", "api está saudável", nil)
 }

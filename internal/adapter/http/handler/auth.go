@@ -27,15 +27,15 @@ type loginRequest struct {
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "algo deu errado", err.Error())
+		response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
 		return
 	}
 
 	token, err := ah.svc.Login(context.Background(), body.Username, body.Password)
 	if err != nil {
-		response.JSON(w, http.StatusUnauthorized, "sem permissão", err.Error())
+		response.JSON(w, http.StatusUnauthorized, "sem permissão", nil, err.Error())
 		return
 	}
 
-	response.JSON(w, http.StatusOK, "autenticado com sucesso", token)
+	response.JSON(w, http.StatusOK, "autenticado com sucesso", token, nil)
 }

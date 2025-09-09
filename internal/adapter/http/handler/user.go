@@ -41,7 +41,7 @@ type registerResponse struct {
 func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "algo deu errado", err.Error())
+		response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
 		return
 	}
 
@@ -56,13 +56,13 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", nil, err.Error())
 			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado", err.Error())
+			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
 			return
 		}
 	}
@@ -76,7 +76,7 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: newUser.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusCreated, "usuário criado com sucesso!", res)
+	response.JSON(w, http.StatusCreated, "usuário criado com sucesso!", res, nil)
 }
 
 type getUserResponse struct {
@@ -91,7 +91,7 @@ type getUserResponse struct {
 func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil)
+		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
 		return
 	}
 
@@ -99,10 +99,10 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao obter usuário", err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro ao obter usuário", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", err.Error())
+			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, err.Error())
 			return
 		}
 	}
@@ -116,7 +116,7 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusOK, "usuário encontrado!", res)
+	response.JSON(w, http.StatusOK, "usuário encontrado!", res, nil)
 }
 
 type listUsersResponse struct {
@@ -133,19 +133,19 @@ func (uh *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 
 	if pageStr == "" || limitStr == "" {
-		response.JSON(w, http.StatusBadRequest, "page e limit são obrigatórios", "")
+		response.JSON(w, http.StatusBadRequest, "page e limit são obrigatórios", nil, nil)
 		return
 	}
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "page inválido", err.Error())
+		response.JSON(w, http.StatusBadRequest, "page inválido", nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "limit inválido", nil)
+		response.JSON(w, http.StatusBadRequest, "limit inválido", nil, nil)
 		return
 	}
 
@@ -153,7 +153,7 @@ func (uh *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil)
+			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, nil)
 			return
 		}
 	}
@@ -170,7 +170,7 @@ func (uh *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	response.JSON(w, http.StatusOK, "usuários encontrados!", list)
+	response.JSON(w, http.StatusOK, "usuários encontrados!", list, nil)
 }
 
 type updateUserRequest struct {
@@ -192,13 +192,13 @@ type updateUserResponse struct {
 func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil)
+		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
 		return
 	}
 
 	var req updateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "erro ao converter para JSON", err)
+		response.JSON(w, http.StatusInternalServerError, "erro ao converter para JSON", nil, err.Error())
 		return
 	}
 
@@ -215,10 +215,10 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro atualizar usuário", err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro atualizar usuário", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", err.Error())
+			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, err.Error())
 			return
 		}
 	}
@@ -232,9 +232,27 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: updateUser.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusOK, "usuário alterado!", res)
+	response.JSON(w, http.StatusOK, "usuário alterado!", res, nil)
 }
 
 func (uh *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		return
+	}
 
+	err := uh.svc.DeleteUser(r.Context(), id)
+	if err != nil {
+		switch err {
+		case domain.ErrDataNotFound:
+			response.JSON(w, http.StatusBadRequest, "erro ao deletar usuário", nil, err.Error())
+			return
+		default:
+			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, err.Error())
+			return
+		}
+	}
+
+	response.JSON(w, http.StatusOK, "usuário deletado com sucesso!", nil, nil)
 }
