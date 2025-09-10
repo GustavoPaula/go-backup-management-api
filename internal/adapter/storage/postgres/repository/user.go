@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"log/slog"
 	"time"
 
@@ -40,12 +39,11 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) (*d
 		)
 
 	if err != nil {
-		slog.Error("erro ao encontrar usuário", "error", err)
-		return nil, err
-	}
-
-	if err == sql.ErrNoRows {
-		slog.Error("erro ao gravar dados na tabela users", "error", err)
+		if err == pgx.ErrNoRows {
+			slog.Error("erro ao gravar dados na tabela users", "error", err)
+			return nil, err
+		}
+		slog.Error("Erro ao criar usuário", "error", err.Error())
 		return nil, err
 	}
 
@@ -72,9 +70,10 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id string) (*domain.U
 	)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if err == pgx.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
+		slog.Error("Erro ao buscar usuário pelo ID", "error", err.Error())
 		return nil, err
 	}
 
@@ -104,6 +103,7 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 		if err == pgx.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
+		slog.Error("Erro ao buscar usuário pelo username", "error", err.Error())
 		return nil, err
 	}
 
@@ -133,6 +133,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 		if err == pgx.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
+		slog.Error("Erro ao buscar usuário por e-mail", "error", err.Error())
 		return nil, err
 	}
 
@@ -153,7 +154,7 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 
 	rows, err := ur.db.Query(ctx, query, limit, offset)
 	if err != nil {
-		slog.Error("erro ao buscar usuários", "error", err)
+		slog.Error("Erro ao buscar usuários", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -169,6 +170,7 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 			&user.UpdatedAt,
 		)
 		if err != nil {
+			slog.Error("Erro ao fazer rows scan no List Users", "error", err.Error())
 			return nil, err
 		}
 
@@ -197,12 +199,10 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) (*d
 	)
 
 	if err != nil {
-		slog.Error("Usuário não encontrado", "error", err)
-		return nil, domain.ErrDataNotFound
-	}
-
-	if err == sql.ErrNoRows {
-		slog.Error("Erro ao atualizar os dados do usuário", "error", err)
+		if err == pgx.ErrNoRows {
+			return nil, domain.ErrDataNotFound
+		}
+		slog.Error("Erro ao atualizar os dados do usuário", "error", err.Error())
 		return nil, err
 	}
 

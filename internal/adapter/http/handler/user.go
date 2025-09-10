@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -216,6 +217,10 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusInternalServerError, "erro ao converter para JSON", nil, err.Error())
 		return
+	}
+
+	if req.Email != "" {
+		fmt.Println("caiu aqui")
 	}
 
 	user := domain.User{
