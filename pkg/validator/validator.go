@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 	"regexp"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -19,8 +20,8 @@ func UsernameValidate(username string) error {
 		return errors.New("o username não pode conter espaços")
 	}
 
-	if !regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString(username) {
-		return errors.New("o username não pode conter caracteres especiais")
+	if !regexp.MustCompile(`^[a-zA-Z0-9_]+$`).MatchString(username) {
+		return errors.New("o username não pode conter caracteres especiais sem ser o underscore")
 	}
 
 	return nil
@@ -42,16 +43,28 @@ func PasswordValidate(password string) error {
 	return nil
 }
 
-func EmailValidate(email string) error {
+func EmailValidate(email string) (string, error) {
+	normalized := strings.ToLower(email)
+
 	if email == "" {
-		return errors.New("o e-mail deve ser preenchido")
+		return "", errors.New("o e-mail deve ser preenchido")
 	}
 
 	regex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
 	if !regex.MatchString(email) {
-		return errors.New("formato de e-mail inválido")
+		return "", errors.New("formato de e-mail inválido")
 	}
 
-	return nil
+	return normalized, nil
+}
+
+func UserRoleValidate(role string) (string, error) {
+	normalized := strings.ToLower(role)
+
+	if normalized != "admin" && normalized != "member" {
+		return "", errors.New("valor de role precisa ser 'admin' ou 'member'")
+	}
+
+	return normalized, nil
 }

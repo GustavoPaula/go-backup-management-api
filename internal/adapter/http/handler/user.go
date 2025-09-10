@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -57,14 +56,15 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := validator.EmailValidate(req.Email); err != nil {
+	email, err := validator.EmailValidate(req.Email)
+	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
 		return
 	}
 
 	user := domain.User{
 		Username: req.Username,
-		Email:    req.Email,
+		Email:    email,
 		Password: req.Password,
 		Role:     domain.UserRole(req.Role),
 	}
@@ -219,8 +219,36 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Username != "" {
+		if err := validator.UsernameValidate(req.Username); err != nil {
+			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			return
+		}
+	}
+
 	if req.Email != "" {
-		fmt.Println("caiu aqui")
+		email, err := validator.EmailValidate(req.Email)
+		if err != nil {
+			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			return
+		}
+		req.Email = email
+	}
+
+	if req.Password != "" {
+		if err := validator.PasswordValidate(req.Password); err != nil {
+			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			return
+		}
+	}
+
+	if req.Role != "" {
+		role, err := validator.UserRoleValidate(req.Role)
+		if err != nil {
+			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			return
+		}
+		req.Role = role
 	}
 
 	user := domain.User{
