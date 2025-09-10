@@ -28,12 +28,12 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) (*d
 		RETURNING id, username, email, password, role, created_at, updated_at
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash, user.Role, time.Now(), time.Now()).
+	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.Password, user.Role, time.Now(), time.Now()).
 		Scan(
 			&user.ID,
 			&user.Username,
 			&user.Email,
-			&user.PasswordHash,
+			&user.Password,
 			&user.Role,
 			&user.CreatedAt,
 			&user.UpdatedAt,
@@ -65,7 +65,7 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id string) (*domain.U
 		&user.ID,
 		&user.Username,
 		&user.Email,
-		&user.PasswordHash,
+		&user.Password,
 		&user.Role,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -94,7 +94,7 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 		&user.ID,
 		&user.Username,
 		&user.Email,
-		&user.PasswordHash,
+		&user.Password,
 		&user.Role,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -123,7 +123,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 		&user.ID,
 		&user.Username,
 		&user.Email,
-		&user.PasswordHash,
+		&user.Password,
 		&user.Role,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -163,7 +163,7 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 			&user.ID,
 			&user.Email,
 			&user.Username,
-			&user.PasswordHash,
+			&user.Password,
 			&user.Role,
 			&user.CreatedAt,
 			&user.UpdatedAt,
@@ -186,11 +186,11 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) (*d
 		RETURNING id, username, email, password, role, created_at, updated_at
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.PasswordHash, user.Role, time.Now(), user.ID).Scan(
+	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.Password, user.Role, time.Now(), user.ID).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Email,
-		&user.PasswordHash,
+		&user.Password,
 		&user.Role,
 		&user.CreatedAt,
 		&user.UpdatedAt,

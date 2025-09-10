@@ -29,12 +29,12 @@ func (us *userService) Register(ctx context.Context, user *domain.User) (*domain
 		return nil, domain.ErrConflictingData
 	}
 
-	hashedPassword, err := crypto.HashPassword(user.PasswordHash)
+	hashedPassword, err := crypto.HashPassword(user.Password)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
 
-	user.PasswordHash = hashedPassword
+	user.Password = hashedPassword
 	user, err = us.repo.CreateUser(ctx, user)
 	if err != nil {
 		return nil, domain.ErrInternal
@@ -85,8 +85,8 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		user.Username = existingUser.Username
 	}
 
-	if user.PasswordHash == "" {
-		user.PasswordHash = existingUser.PasswordHash
+	if user.Password == "" {
+		user.Password = existingUser.Password
 	}
 
 	if user.Role == "" {

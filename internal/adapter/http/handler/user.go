@@ -62,10 +62,10 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := domain.User{
-		Username:     req.Username,
-		Email:        req.Email,
-		PasswordHash: req.Password,
-		Role:         domain.UserRole(req.Role),
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+		Role:     domain.UserRole(req.Role),
 	}
 
 	newUser, err := uh.svc.Register(r.Context(), &user)
@@ -219,11 +219,11 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := domain.User{
-		ID:           id,
-		Username:     req.Username,
-		Email:        req.Email,
-		PasswordHash: req.Password,
-		Role:         domain.UserRole(req.Role),
+		ID:       id,
+		Username: req.Username,
+		Email:    req.Email,
+		Password: req.Password,
+		Role:     domain.UserRole(req.Role),
 	}
 
 	updateUser, err := uh.svc.UpdateUser(r.Context(), &user)

@@ -10,11 +10,11 @@ const (
 )
 
 type User struct {
-	ID           string
-	Email        string
-	Username     string
-	PasswordHash string
-	Role         UserRole
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID        string
+	Email     string
+	Username  string
+	Password  string
+	Role      UserRole
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

@@ -29,7 +29,7 @@ func (as *authService) Login(ctx context.Context, username, password string) (st
 		return "", domain.ErrInternal
 	}
 
-	err = crypto.VerifyPassword(password, user.PasswordHash)
+	err = crypto.VerifyPassword(password, user.Password)
 	if err != nil {
 		return "", domain.ErrInvalidCredentials
 	}
