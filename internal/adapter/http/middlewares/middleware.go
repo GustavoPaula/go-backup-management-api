@@ -1,0 +1,82 @@
+package middlewares
+
+import (
+	"context"
+	"net/http"
+	"strings"
+
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/pkg/response"
+)
+
+type contextKey string
+
+const (
+	// authorizationHeaderKey is the key for authorization header in the request
+	authorizationHeaderKey = "authorization"
+	// authorizationType is the accepted authorization type
+	authorizationType = "bearer"
+	// authorizationPayloadKey is the key for authorization payload in the context
+	authorizationPayloadKey = contextKey("authorization_payload")
+)
+
+// authMiddleware is a middleware to check if the user is authenticated
+func AuthMiddleware(token port.TokenService) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authorizationHeader := r.Header.Get(authorizationHeaderKey)
+
+			isEmpty := len(authorizationHeader) == 0
+			if isEmpty {
+				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrEmptyAuthorizationHeader)
+				return
+			}
+
+			fields := strings.Fields(authorizationHeader)
+			isValid := len(fields) == 2
+			if !isValid {
+				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrInvalidAuthorizationHeader)
+				return
+			}
+
+			currentAuthorizationType := strings.ToLower(fields[0])
+			if currentAuthorizationType != authorizationType {
+				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrInvalidAuthorizationHeader)
+				return
+			}
+
+			accessToken := fields[1]
+			payload, err := token.VerifyToken(accessToken)
+			if err != nil {
+				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrUnauthorized)
+				return
+			}
+
+			// Adiciona o payload ao contexto da requisição
+			ctx := context.WithValue(r.Context(), authorizationPayloadKey, payload)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
+}
+
+// adminMiddleware is a middleware to check if the user is an admin
+func AdminMiddleware() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			payload, ok := r.Context().Value(authorizationPayloadKey).(*domain.TokenPayload)
+			if !ok {
+				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrInvalidAuthorizationPayload)
+				return
+			}
+
+			isAdmin := payload.Role == domain.Admin
+			if !isAdmin {
+				response.JSON(w, http.StatusForbidden, "falha na autenticação!", nil, domain.ErrForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
+}

@@ -17,7 +17,7 @@ VALUES (
   gen_random_uuid(), 
   'admin@admin.com', 
   'admin', 
-  '$2a$14$R704Gt1pYcL2X/8KAqqsvO8HnGm13DVo3HILfcZSxavsUxIQG6mo2', 
+  '$2a$10$wvyY/NTJ4PYnxpx8MhrGO.wWHRjwKAbNUUbSXTMkzeWxBMx8oS9K.', 
   'admin', 
   current_timestamp,
   current_timestamp

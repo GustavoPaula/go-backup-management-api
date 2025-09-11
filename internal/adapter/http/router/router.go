@@ -9,6 +9,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/config"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/handler"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/middlewares"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -40,11 +41,16 @@ func NewRouter(
 	r.Get("/health", healthyHandler.Health)
 
 	// Rotas de usuários
+	r.Post("/login", authHandler.Login)
 	r.Group(func(r chi.Router) {
-		r.Post("/register", userHandler.Register)
-		r.Post("/login", authHandler.Login)
-		r.Get("/users/{id}", userHandler.GetUser)
+		r.Use(middlewares.AdminMiddleware())
 		r.Get("/users", userHandler.ListUsers)
+	})
+
+	r.Group(func(r chi.Router) {
+		r.Use(middlewares.AuthMiddleware(token))
+		r.Post("/register", userHandler.Register)
+		r.Get("/users/{id}", userHandler.GetUser)
 		r.Put("/users/{id}", userHandler.UpdateUser)
 		r.Delete("/users/{id}", userHandler.DeleteUser)
 	})
