@@ -2,7 +2,6 @@ package paseto
 
 import (
 	"encoding/hex"
-	"fmt"
 	"os"
 	"time"
 
@@ -46,12 +45,11 @@ func New(config *config.Token) (port.TokenService, error) {
 
 func getPersistentKey(config *config.Token) (paseto.V4SymmetricKey, error) {
 	// Prioridade 1: Variável de ambiente
-	fmt.Println(config.KeyHex)
 	if keyHex := config.KeyHex; keyHex != "" {
 		return keyFromHex(keyHex)
 	}
 
-	// Prioridade 3: Arquivo padrão
+	// Prioridade 2: Arquivo padrão
 	if key, err := keyFromFile("paseto.key"); err == nil {
 		return key, nil
 	}
