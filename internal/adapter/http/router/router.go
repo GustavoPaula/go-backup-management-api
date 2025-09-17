@@ -44,12 +44,12 @@ func NewRouter(
 	r.Post("/login", authHandler.Login)
 	r.Group(func(r chi.Router) {
 		r.Use(middlewares.AdminMiddleware())
-		r.Get("/users", userHandler.ListUsers)
 	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware(token))
 		r.Post("/register", userHandler.Register)
+		r.Get("/users", userHandler.ListUsers)
 		r.Get("/users/{id}", userHandler.GetUser)
 		r.Put("/users/{id}", userHandler.UpdateUser)
 		r.Delete("/users/{id}", userHandler.DeleteUser)
