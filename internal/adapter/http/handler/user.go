@@ -47,18 +47,24 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := validator.UsernameValidate(req.Username); err != nil {
-		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
 		return
 	}
 
 	if err := validator.PasswordValidate(req.Password); err != nil {
-		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
 		return
 	}
 
 	email, err := validator.EmailValidate(req.Email)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
+		return
+	}
+
+	role, err := validator.UserRoleValidate(req.Role)
+	if err != nil {
+		response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
 		return
 	}
 
@@ -66,7 +72,7 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Username: req.Username,
 		Email:    email,
 		Password: req.Password,
-		Role:     domain.UserRole(req.Role),
+		Role:     domain.UserRole(role),
 	}
 
 	newUser, err := uh.svc.Register(r.Context(), &user)
@@ -221,7 +227,7 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	if req.Username != "" {
 		if err := validator.UsernameValidate(req.Username); err != nil {
-			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
 			return
 		}
 	}
@@ -229,7 +235,7 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if req.Email != "" {
 		email, err := validator.EmailValidate(req.Email)
 		if err != nil {
-			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
 			return
 		}
 		req.Email = email
@@ -237,7 +243,7 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	if req.Password != "" {
 		if err := validator.PasswordValidate(req.Password); err != nil {
-			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
 			return
 		}
 	}
@@ -245,7 +251,7 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if req.Role != "" {
 		role, err := validator.UserRoleValidate(req.Role)
 		if err != nil {
-			response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+			response.JSON(w, http.StatusUnprocessableEntity, "body inválido", nil, err.Error())
 			return
 		}
 		req.Role = role
