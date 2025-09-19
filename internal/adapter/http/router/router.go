@@ -57,6 +57,10 @@ func NewRouter(
 		})
 
 		r.Post("/customers", customerHandler.CreateCustomer)
+		r.Get("/customers/{id}", customerHandler.GetCustomer)
+		r.Get("/customers", customerHandler.ListCustomers)
+		r.Put("/customers/{id}", customerHandler.UpdateCustomer)
+		r.Delete("/customers/{id}", customerHandler.DeleteCustomer)
 	})
 
 	return &router{

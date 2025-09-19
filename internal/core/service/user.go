@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
@@ -71,10 +72,32 @@ func (us *userService) ListUsers(ctx context.Context, page, limit int) ([]domain
 func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
 	existingUser, err := us.repo.GetUserByID(ctx, user.ID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
+		if errors.Is(err, domain.ErrDataNotFound) {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
+	}
+
+	if user.Username != "" && user.Username != existingUser.Username {
+		userWithSameUsername, err := us.repo.GetUserByUsername(ctx, user.Username)
+		if err != nil && !errors.Is(err, domain.ErrDataNotFound) {
+			return nil, domain.ErrInternal
+		}
+
+		if userWithSameUsername != nil && userWithSameUsername.ID != user.ID {
+			return nil, domain.ErrConflictingData
+		}
+	}
+
+	if user.Email != "" && user.Email != existingUser.Email {
+		userWithSameEmail, err := us.repo.GetUserByEmail(ctx, user.Email)
+		if err != nil && !errors.Is(err, domain.ErrDataNotFound) {
+			return nil, domain.ErrInternal
+		}
+
+		if userWithSameEmail != nil && userWithSameEmail.ID != user.ID {
+			return nil, domain.ErrConflictingData
+		}
 	}
 
 	if user.Email == "" {
@@ -104,7 +127,7 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 func (us *userService) DeleteUser(ctx context.Context, id string) error {
 	existingUser, err := us.repo.GetUserByID(ctx, id)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
+		if errors.Is(err, domain.ErrDataNotFound) {
 			return err
 		}
 		return domain.ErrInternal

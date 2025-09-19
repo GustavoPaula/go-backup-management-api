@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
@@ -18,19 +19,12 @@ func NewCustomerService(repo port.CustomerRepository) port.CustomerService {
 }
 
 func (cs *customerService) CreateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
-	existingCustomer, err := cs.repo.GetCustomerByName(ctx, customer.Name)
-	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
-	}
-
+	existingCustomer, _ := cs.repo.GetCustomerByName(ctx, customer.Name)
 	if existingCustomer != nil {
 		return nil, domain.ErrConflictingData
 	}
 
-	customer, err = cs.repo.CreateCustomer(ctx, customer)
+	customer, err := cs.repo.CreateCustomer(ctx, customer)
 	if err != nil {
 		return nil, domain.ErrInternal
 	}
@@ -43,8 +37,8 @@ func (cs *customerService) GetCustomer(ctx context.Context, id string) (*domain.
 
 	customer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
+		if errors.Is(err, domain.ErrDataNotFound) {
+			return nil, domain.ErrDataNotFound
 		}
 		return nil, domain.ErrInternal
 	}
@@ -52,7 +46,7 @@ func (cs *customerService) GetCustomer(ctx context.Context, id string) (*domain.
 	return customer, nil
 }
 
-func (cs *customerService) ListCustomers(ctx context.Context, page, limit int64) ([]domain.Customer, error) {
+func (cs *customerService) ListCustomers(ctx context.Context, page, limit int) ([]domain.Customer, error) {
 	var customers []domain.Customer
 
 	customers, err := cs.repo.ListCustomers(ctx, page, limit)
@@ -66,10 +60,25 @@ func (cs *customerService) ListCustomers(ctx context.Context, page, limit int64)
 func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, customer.ID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
+		if errors.Is(err, domain.ErrDataNotFound) {
+			return nil, domain.ErrDataNotFound
 		}
 		return nil, domain.ErrInternal
+	}
+
+	if existingCustomer == nil {
+		return nil, domain.ErrInternal
+	}
+
+	if customer.Name != "" && customer.Name != existingCustomer.Name {
+		customerWithSameName, err := cs.repo.GetCustomerByName(ctx, customer.Name)
+		if err != nil && !errors.Is(err, domain.ErrDataNotFound) {
+			return nil, domain.ErrInternal
+		}
+
+		if customerWithSameName != nil && customerWithSameName.ID != customer.ID {
+			return nil, domain.ErrConflictingData
+		}
 	}
 
 	if customer.Name == "" {
@@ -87,7 +96,7 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 func (cs *customerService) DeleteCustomer(ctx context.Context, id string) error {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
+		if errors.Is(err, domain.ErrDataNotFound) {
 			return err
 		}
 		return domain.ErrInternal

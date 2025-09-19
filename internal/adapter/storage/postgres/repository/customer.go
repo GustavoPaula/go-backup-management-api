@@ -101,14 +101,78 @@ func (cr *customerRepository) GetCustomerByName(ctx context.Context, name string
 	return &customer, nil
 }
 
-func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int64) ([]domain.Customer, error) {
-	return nil, nil
+func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int) ([]domain.Customer, error) {
+	var customer domain.Customer
+	var customers []domain.Customer
+	offset := (page - 1) * limit
+
+	query := `
+		SELECT id, name, created_at, updated_at
+		FROM customers
+		ORDER BY name
+		LIMIT $1 OFFSET $2
+	`
+
+	rows, err := cr.db.Query(ctx, query, limit, offset)
+	if err != nil {
+		slog.Error("Erro ao buscar usuários", "error", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(
+			&customer.ID,
+			&customer.Name,
+			&customer.CreatedAt,
+			&customer.UpdatedAt,
+		)
+		if err != nil {
+			slog.Error("Erro ao fazer rows scan no List Users", "error", err.Error())
+			return nil, err
+		}
+
+		customers = append(customers, customer)
+	}
+
+	return customers, nil
 }
 
 func (cr *customerRepository) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
-	return nil, nil
+	query := `
+		UPDATE customers
+		SET name = $1, updated_at = $2
+		WHERE id = $3
+		RETURNING id, name, created_at, updated_at
+	`
+
+	err := cr.db.QueryRow(ctx, query, customer.Name, time.Now(), customer.ID).Scan(
+		&customer.ID,
+		&customer.Name,
+		&customer.CreatedAt,
+		&customer.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, domain.ErrDataNotFound
+		}
+		slog.Error("Erro ao atualizar os dados do usuário", "error", err.Error())
+		return nil, err
+	}
+
+	return customer, nil
 }
 
 func (cr *customerRepository) DeleteCustomer(ctx context.Context, id string) error {
+	query := `
+		DELETE FROM customers
+		WHERE id = $1
+	`
+	_, err := cr.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
