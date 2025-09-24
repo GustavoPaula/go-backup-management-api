@@ -50,7 +50,7 @@ func (ds *deviceService) GetDevice(ctx context.Context, id string) (*domain.Devi
 	return device, nil
 }
 
-func (ds *deviceService) ListDevices(ctx context.Context, page, limit int64) ([]domain.Device, error) {
+func (ds *deviceService) ListDevices(ctx context.Context, page, limit int) ([]domain.Device, error) {
 	var devices []domain.Device
 
 	devices, err := ds.deviceRepo.ListDevices(ctx, page, limit)

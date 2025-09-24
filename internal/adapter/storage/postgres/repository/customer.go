@@ -40,7 +40,7 @@ func (cr *customerRepository) CreateCustomer(ctx context.Context, customer *doma
 			slog.Error("erro ao gravar dados na tabela customers", "error", err)
 			return nil, err
 		}
-		slog.Error("Erro ao criar usuário", "error", err.Error())
+		slog.Error("Erro ao criar customer", "error", err.Error())
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func (cr *customerRepository) GetCustomerByID(ctx context.Context, id string) (*
 		if err == pgx.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
-		slog.Error("Erro ao buscar usuário pelo username", "error", err.Error())
+		slog.Error("Erro ao buscar customer", "error", err.Error())
 		return nil, err
 	}
 
@@ -94,7 +94,7 @@ func (cr *customerRepository) GetCustomerByName(ctx context.Context, name string
 		if err == pgx.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
-		slog.Error("Erro ao buscar usuário pelo username", "error", err.Error())
+		slog.Error("Erro ao buscar customer", "error", err.Error())
 		return nil, err
 	}
 
@@ -115,7 +115,7 @@ func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int
 
 	rows, err := cr.db.Query(ctx, query, limit, offset)
 	if err != nil {
-		slog.Error("Erro ao buscar usuários", "error", err)
+		slog.Error("Erro ao buscar customers", "error", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -128,7 +128,7 @@ func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int
 			&customer.UpdatedAt,
 		)
 		if err != nil {
-			slog.Error("Erro ao fazer rows scan no List Users", "error", err.Error())
+			slog.Error("Erro ao fazer rows scan no List customers", "error", err.Error())
 			return nil, err
 		}
 
@@ -157,7 +157,7 @@ func (cr *customerRepository) UpdateCustomer(ctx context.Context, customer *doma
 		if err == pgx.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
-		slog.Error("Erro ao atualizar os dados do usuário", "error", err.Error())
+		slog.Error("Erro ao atualizar os dados do customers", "error", err.Error())
 		return nil, err
 	}
 
