@@ -66,7 +66,7 @@ func (ch *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request
 		UpdatedAt: newCustomer.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusCreated, "usuário criado com sucesso!", res, nil)
+	response.JSON(w, http.StatusCreated, "cliente criado com sucesso!", res, nil)
 }
 
 type getCustomerResponse struct {
@@ -102,7 +102,7 @@ func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: customer.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusOK, "usuário encontrado!", res, nil)
+	response.JSON(w, http.StatusOK, "cliente encontrado", res, nil)
 }
 
 type listCustomersResponse struct {
@@ -152,7 +152,7 @@ func (ch *CustomerHandler) ListCustomers(w http.ResponseWriter, r *http.Request)
 		})
 	}
 
-	response.JSON(w, http.StatusOK, "usuários encontrados!", list, nil)
+	response.JSON(w, http.StatusOK, "clientes encontrados!", list, nil)
 }
 
 type updateCustomerRequest struct {
@@ -189,10 +189,10 @@ func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro atualizar usuário", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro atualizar cliente", nil, err.Error())
 			return
 		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusBadRequest, "erro atualizar usuário", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "erro atualizar cliente", nil, err.Error())
 			return
 		default:
 			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, err.Error())
