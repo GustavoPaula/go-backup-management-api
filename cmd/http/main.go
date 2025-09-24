@@ -56,12 +56,17 @@ func main() {
 	customerSvc := service.NewCustomerService(customerRepo)
 	customerHandler := handler.NewCustomerHandler(customerSvc)
 
+	deviceRepo := repository.NewDeviceRepository(db)
+	deviceSvc := service.NewDeviceService(deviceRepo, customerRepo)
+	deviceHandler := handler.NewDeviceHandler(deviceSvc)
+
 	router := router.NewRouter(
 		token,
 		*healthyHandler,
 		*userHandler,
 		*authHandler,
 		*customerHandler,
+		*deviceHandler,
 	)
 
 	if err := router.Serve(ctx, config.HTTP); err != nil {
