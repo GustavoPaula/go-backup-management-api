@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 
-	"github.com/GustavoPaula/go-backup-management-api/internal/core/crypto"
+	crypto "github.com/GustavoPaula/go-backup-management-api/internal/adapter/security"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
 )
 
 type userService struct {
@@ -19,12 +20,20 @@ func NewUserService(repo port.UserRepository) port.UserService {
 }
 
 func (us *userService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
-	existingUser, _ := us.repo.GetUserByEmail(ctx, user.Email)
+	existingUser, err := us.repo.GetUserByEmail(ctx, user.Email)
+	if err != nil && err == domain.ErrDataNotFound {
+		return nil, err
+	}
+
 	if existingUser != nil {
 		return nil, domain.ErrConflictingData
 	}
 
-	existingUser, _ = us.repo.GetUserByUsername(ctx, user.Username)
+	existingUser, err = us.repo.GetUserByUsername(ctx, user.Username)
+	if err != nil && err == domain.ErrDataNotFound {
+		return nil, err
+	}
+
 	if existingUser != nil {
 		return nil, domain.ErrConflictingData
 	}
@@ -99,28 +108,24 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		}
 	}
 
-	if user.Email == "" {
-		user.Email = existingUser.Email
+	user = &domain.User{
+		ID:       user.ID,
+		Username: util.Coalesce(user.Username, existingUser.Username),
+		Email:    util.Coalesce(user.Email, existingUser.Email),
+		Role:     util.Coalesce(user.Role, existingUser.Role),
 	}
 
-	if user.Username == "" {
-		user.Username = existingUser.Username
-	}
+	if user.Password != "" {
+		hashedPassword, err := crypto.HashPassword(user.Password)
+		if err != nil {
+			return nil, domain.ErrInternal
+		}
 
-	if user.Password == "" {
+		user.Password = hashedPassword
+	} else {
 		user.Password = existingUser.Password
 	}
 
-	if user.Role == "" {
-		user.Role = existingUser.Role
-	}
-
-	hashedPassword, err := crypto.HashPassword(user.Password)
-	if err != nil {
-		return nil, domain.ErrInternal
-	}
-
-	user.Password = hashedPassword
 	updateUser, err := us.repo.UpdateUser(ctx, user)
 	if err != nil {
 		return nil, domain.ErrInternal

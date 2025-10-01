@@ -204,12 +204,12 @@ type updateUserRequest struct {
 }
 
 type updateUserResponse struct {
-	ID        string          `json:"id,omitempty"`
-	Username  string          `json:"username,omitempty"`
-	Email     string          `json:"email,omitempty"`
-	Role      domain.UserRole `json:"role,omitempty"`
-	CreatedAt time.Time       `json:"created_at,omitzero"`
-	UpdatedAt time.Time       `json:"updated_at,omitzero"`
+	ID        string          `json:"id"`
+	Username  string          `json:"username"`
+	Email     string          `json:"email"`
+	Role      domain.UserRole `json:"role"`
+	CreatedAt time.Time       `json:"created_at"`
+	UpdatedAt time.Time       `json:"updated_at"`
 }
 
 func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
