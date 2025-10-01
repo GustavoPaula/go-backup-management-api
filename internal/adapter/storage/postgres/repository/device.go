@@ -24,7 +24,7 @@ func (dr *deviceRepository) CreateDevice(ctx context.Context, device *domain.Dev
 	query := `
 		INSERT INTO devices (name, customer_id, created_at, updated_at)
 		VALUES ($1, $2, $3, $4)
-		RETURNING id, name, created_at, updated_at
+		RETURNING id, name, customer_id, created_at, updated_at
 	`
 
 	err := dr.db.QueryRow(ctx, query, device.Name, device.CustomerID, time.Now(), time.Now()).
@@ -38,10 +38,10 @@ func (dr *deviceRepository) CreateDevice(ctx context.Context, device *domain.Dev
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			slog.Error("erro ao gravar dados na tabela devices", "error", err)
+			slog.Error("erro ao gravar dados na tabela dispositivo", "error", err)
 			return nil, err
 		}
-		slog.Error("Erro ao criar usuário", "error", err.Error())
+		slog.Error("Erro ao criar dispositivo", "error", err.Error())
 		return nil, err
 	}
 

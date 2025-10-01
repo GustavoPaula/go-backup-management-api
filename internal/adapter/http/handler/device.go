@@ -43,7 +43,8 @@ func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	device := domain.Device{
-		Name: req.Name,
+		Name:       req.Name,
+		CustomerID: req.CustomerID,
 	}
 
 	newDevice, err := dh.svc.CreateDevice(r.Context(), &device)

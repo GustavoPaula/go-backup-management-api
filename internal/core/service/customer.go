@@ -38,7 +38,7 @@ func (cs *customerService) GetCustomer(ctx context.Context, id string) (*domain.
 	customer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrDataNotFound) {
-			return nil, domain.ErrDataNotFound
+			return nil, err
 		}
 		return nil, domain.ErrInternal
 	}
@@ -61,7 +61,7 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, customer.ID)
 	if err != nil {
 		if errors.Is(err, domain.ErrDataNotFound) {
-			return nil, domain.ErrDataNotFound
+			return nil, err
 		}
 		return nil, domain.ErrInternal
 	}
