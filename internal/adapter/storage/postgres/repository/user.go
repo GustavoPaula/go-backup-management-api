@@ -42,7 +42,6 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) (*d
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			slog.Error("Insert não retornou linha na tabela users", "error", err)
 			return nil, err
 		}
 		slog.Error("Erro ao criar usuário", "error", err)
@@ -73,7 +72,6 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id string) (*domain.U
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			slog.Error("Select não retornou linha na tabela users", "error", err)
 			return nil, domain.ErrDataNotFound
 		}
 		slog.Error("Erro ao buscar usuário pelo ID", "error", err.Error())
@@ -104,7 +102,6 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			slog.Error("Select não retornou linha na tabela users", "error", err)
 			return nil, domain.ErrDataNotFound
 		}
 		slog.Error("Erro ao buscar usuário pelo username", "error", err.Error())
@@ -135,7 +132,6 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			slog.Error("Select não retornou linha na tabela users", "error", err)
 			return nil, domain.ErrDataNotFound
 		}
 		slog.Error("Erro ao buscar usuário por e-mail", "error", err.Error())
@@ -205,7 +201,6 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) (*d
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			slog.Error("Update não retornou linha na tabela users", "error", err)
 			return nil, domain.ErrDataNotFound
 		}
 		slog.Error("Erro ao atualizar os dados do usuário", "error", err.Error())

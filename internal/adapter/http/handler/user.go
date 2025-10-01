@@ -79,10 +79,10 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", nil, err.Error())
+			response.JSON(w, http.StatusConflict, "erro ao criar usuário", nil, err.Error())
 			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar usuário", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "erro ao criar usuário", nil, err.Error())
 			return
 		default:
 			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
