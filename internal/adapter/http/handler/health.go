@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 
-	"github.com/GustavoPaula/go-backup-management-api/pkg/response"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
 )
 
 type HealthCheckHandler struct{}

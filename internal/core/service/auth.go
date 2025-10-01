@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/crypto"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
-	"github.com/GustavoPaula/go-backup-management-api/pkg/crypto"
 )
 
 type authService struct {

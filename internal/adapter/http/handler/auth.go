@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/validator"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
-	"github.com/GustavoPaula/go-backup-management-api/pkg/response"
-	"github.com/GustavoPaula/go-backup-management-api/pkg/validator"
 )
 
 type AuthHandler struct {
