@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
 	"github.com/google/uuid"
 )
 
@@ -38,7 +38,7 @@ func (cs *customerService) GetCustomer(ctx context.Context, id uuid.UUID) (*doma
 
 	customer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -61,7 +61,7 @@ func (cs *customerService) ListCustomers(ctx context.Context, page, limit int) (
 func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, customer.ID)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -73,7 +73,7 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 
 	if customer.Name != "" && customer.Name != existingCustomer.Name {
 		customerWithSameName, err := cs.repo.GetCustomerByName(ctx, customer.Name)
-		if err != nil && !errors.Is(err, domain.ErrDataNotFound) {
+		if err != nil && err != domain.ErrDataNotFound {
 			return nil, domain.ErrInternal
 		}
 
@@ -82,8 +82,9 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 		}
 	}
 
-	if customer.Name == "" {
-		customer.Name = existingCustomer.Name
+	customer = &domain.Customer{
+		ID:   customer.ID,
+		Name: util.Coalesce(customer.Name, existingCustomer.Name),
 	}
 
 	updateCustomer, err := cs.repo.UpdateCustomer(ctx, customer)
@@ -97,10 +98,22 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 func (cs *customerService) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return err
 		}
 		return domain.ErrInternal
+	}
+
+	existingCustomerSameDevices, err := cs.repo.GetCustomerLinkedDevices(ctx, id)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return err
+		}
+		return domain.ErrInternal
+	}
+
+	if existingCustomerSameDevices != uuid.Nil {
+		return domain.ErrConflictingData
 	}
 
 	err = cs.repo.DeleteCustomer(ctx, existingCustomer.ID)

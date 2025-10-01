@@ -242,6 +242,9 @@ func (ch *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request
 		case domain.ErrDataNotFound:
 			response.JSON(w, http.StatusBadRequest, "erro ao deletar cliente", nil, err.Error())
 			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "não é possível excluir o cliente porque existem dispositivos vinculados.", nil, err.Error())
+			return
 		default:
 			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
 			return

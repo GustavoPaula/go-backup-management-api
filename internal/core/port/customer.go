@@ -11,6 +11,7 @@ type CustomerRepository interface {
 	CreateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error)
 	GetCustomerByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error)
 	GetCustomerByName(ctx context.Context, name string) (*domain.Customer, error)
+	GetCustomerLinkedDevices(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	ListCustomers(ctx context.Context, page, limit int) ([]domain.Customer, error)
 	UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error)
 	DeleteCustomer(ctx context.Context, id uuid.UUID) error
