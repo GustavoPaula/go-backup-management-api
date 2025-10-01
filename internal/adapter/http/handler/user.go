@@ -11,6 +11,7 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type UserHandler struct {
@@ -31,7 +32,7 @@ type registerRequest struct {
 }
 
 type registerResponse struct {
-	ID        string          `json:"id"`
+	ID        uuid.UUID       `json:"id"`
 	Username  string          `json:"username"`
 	Email     string          `json:"email"`
 	Role      domain.UserRole `json:"role"`
@@ -103,7 +104,7 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 type getUserResponse struct {
-	ID        string    `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Email     string    `json:"email"`
 	Username  string    `json:"username"`
 	Role      string    `json:"role"`
@@ -112,9 +113,15 @@ type getUserResponse struct {
 }
 
 func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	userId := chi.URLParam(r, "id")
+	if userId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		return
+	}
+
+	id, err := uuid.Parse(userId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
 		return
 	}
 
@@ -143,7 +150,7 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type listUsersResponse struct {
-	ID        string    `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Email     string    `json:"email"`
 	Username  string    `json:"username"`
 	Role      string    `json:"role"`
@@ -204,7 +211,7 @@ type updateUserRequest struct {
 }
 
 type updateUserResponse struct {
-	ID        string          `json:"id"`
+	ID        uuid.UUID       `json:"id"`
 	Username  string          `json:"username"`
 	Email     string          `json:"email"`
 	Role      domain.UserRole `json:"role"`
@@ -213,9 +220,15 @@ type updateUserResponse struct {
 }
 
 func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	userId := chi.URLParam(r, "id")
+	if userId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		return
+	}
+
+	id, err := uuid.Parse(userId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
 		return
 	}
 
@@ -291,13 +304,19 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uh *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	userId := chi.URLParam(r, "id")
+	if userId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
 		return
 	}
 
-	err := uh.svc.DeleteUser(r.Context(), id)
+	id, err := uuid.Parse(userId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		return
+	}
+
+	err = uh.svc.DeleteUser(r.Context(), id)
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:

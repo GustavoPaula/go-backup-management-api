@@ -10,6 +10,7 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type CustomerHandler struct {
@@ -27,7 +28,7 @@ type createCustomerRequest struct {
 }
 
 type createCustomerResponse struct {
-	ID        string    `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -70,16 +71,22 @@ func (ch *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request
 }
 
 type getCustomerResponse struct {
-	ID        string    `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	customerId := chi.URLParam(r, "id")
+	if customerId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		return
+	}
+
+	id, err := uuid.Parse(customerId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
 		return
 	}
 
@@ -106,7 +113,7 @@ func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 }
 
 type listCustomersResponse struct {
-	ID        string    `json:"id"`
+	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -160,16 +167,22 @@ type updateCustomerRequest struct {
 }
 
 type updateCustomerResponse struct {
-	ID        string    `json:"id,omitempty"`
+	ID        uuid.UUID `json:"id,omitempty"`
 	Name      string    `json:"name,omitempty"`
 	CreatedAt time.Time `json:"created_at,omitzero"`
 	UpdatedAt time.Time `json:"updated_at,omitzero"`
 }
 
 func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	customerId := chi.URLParam(r, "id")
+	if customerId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		return
+	}
+
+	id, err := uuid.Parse(customerId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
 		return
 	}
 
@@ -211,13 +224,19 @@ func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request
 }
 
 func (ch *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	customerId := chi.URLParam(r, "id")
+	if customerId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
 		return
 	}
 
-	err := ch.svc.DeleteCustomer(r.Context(), id)
+	id, err := uuid.Parse(customerId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		return
+	}
+
+	err = ch.svc.DeleteCustomer(r.Context(), id)
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:

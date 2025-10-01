@@ -7,6 +7,7 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
+	"github.com/google/uuid"
 )
 
 type userService struct {
@@ -44,7 +45,7 @@ func (us *userService) Register(ctx context.Context, user *domain.User) (*domain
 	return user, nil
 }
 
-func (us *userService) GetUser(ctx context.Context, id string) (*domain.User, error) {
+func (us *userService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var user *domain.User
 
 	user, err := us.repo.GetUserByID(ctx, id)
@@ -126,7 +127,7 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 	return updateUser, nil
 }
 
-func (us *userService) DeleteUser(ctx context.Context, id string) error {
+func (us *userService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	existingUser, err := us.repo.GetUserByID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {

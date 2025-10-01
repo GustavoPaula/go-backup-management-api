@@ -7,6 +7,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -48,7 +49,7 @@ func (dr *deviceRepository) CreateDevice(ctx context.Context, device *domain.Dev
 	return device, nil
 }
 
-func (dr *deviceRepository) GetDeviceByID(ctx context.Context, id string) (*domain.Device, error) {
+func (dr *deviceRepository) GetDeviceByID(ctx context.Context, id uuid.UUID) (*domain.Device, error) {
 	var device domain.Device
 
 	query := `
@@ -141,7 +142,7 @@ func (dr *deviceRepository) UpdateDevice(ctx context.Context, device *domain.Dev
 	return device, nil
 }
 
-func (dr *deviceRepository) DeleteDevice(ctx context.Context, id string) error {
+func (dr *deviceRepository) DeleteDevice(ctx context.Context, id uuid.UUID) error {
 	query := `
 		DELETE FROM devices
 		WHERE id = $1

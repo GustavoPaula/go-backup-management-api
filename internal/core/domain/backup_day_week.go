@@ -1,12 +1,16 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type BackupPlanWeekDay struct {
-	ID           string
+	ID           uuid.UUID
 	Day          string
 	TimeDay      time.Time
-	BackupPlanID string
+	BackupPlanID uuid.UUID
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	BackupPlan   *BackupPlan

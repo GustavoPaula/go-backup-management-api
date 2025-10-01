@@ -1,11 +1,15 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Device struct {
-	ID         string
-	CustomerID string
+	ID         uuid.UUID
 	Name       string
+	CustomerID uuid.UUID
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
 	Customer   *Customer

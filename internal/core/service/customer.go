@@ -6,6 +6,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/google/uuid"
 )
 
 type customerService struct {
@@ -32,7 +33,7 @@ func (cs *customerService) CreateCustomer(ctx context.Context, customer *domain.
 	return customer, nil
 }
 
-func (cs *customerService) GetCustomer(ctx context.Context, id string) (*domain.Customer, error) {
+func (cs *customerService) GetCustomer(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {
 	var customer *domain.Customer
 
 	customer, err := cs.repo.GetCustomerByID(ctx, id)
@@ -93,7 +94,7 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 	return updateCustomer, nil
 }
 
-func (cs *customerService) DeleteCustomer(ctx context.Context, id string) error {
+func (cs *customerService) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrDataNotFound) {

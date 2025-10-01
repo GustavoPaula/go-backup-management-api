@@ -1,12 +1,16 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type BackupPlan struct {
-	ID              string
+	ID              uuid.UUID
 	Name            string
-	BackupSizeBytes int64
-	DeviceID        string
+	BackupSizeBytes int
+	DeviceID        uuid.UUID
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	Customer        *Customer

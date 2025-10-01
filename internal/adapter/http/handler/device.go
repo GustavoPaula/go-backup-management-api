@@ -10,6 +10,7 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type DeviceHandler struct {
@@ -28,9 +29,9 @@ type createDeviceRequest struct {
 }
 
 type createDeviceResponse struct {
-	ID         string    `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	Name       string    `json:"name"`
-	CustomerID string    `json:"customer_id"`
+	CustomerID uuid.UUID `json:"customer_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
@@ -42,9 +43,15 @@ func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	customerId, err := uuid.Parse(req.CustomerID)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		return
+	}
+
 	device := domain.Device{
 		Name:       req.Name,
-		CustomerID: req.CustomerID,
+		CustomerID: customerId,
 	}
 
 	newDevice, err := dh.svc.CreateDevice(r.Context(), &device)
@@ -74,17 +81,23 @@ func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 type getDeviceResponse struct {
-	ID         string    `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	Name       string    `json:"name"`
-	CustomerID string    `json:"customer_id"`
+	CustomerID uuid.UUID `json:"customer_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func (dh *DeviceHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	deviceId := chi.URLParam(r, "id")
+	if deviceId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		return
+	}
+
+	id, err := uuid.Parse(deviceId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
 		return
 	}
 
@@ -112,9 +125,9 @@ func (dh *DeviceHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 type listDevicesResponse struct {
-	ID         string    `json:"id"`
+	ID         uuid.UUID `json:"id"`
 	Name       string    `json:"name"`
-	CustomerID string    `json:"customer_id"`
+	CustomerID uuid.UUID `json:"customer_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
@@ -164,22 +177,28 @@ func (dh *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateDeviceRequest struct {
-	Name       string `json:"name"`
-	CustomerID string `json:"customer_id"`
+	Name       string    `json:"name"`
+	CustomerID uuid.UUID `json:"customer_id"`
 }
 
 type updateDeviceResponse struct {
-	ID         string    `json:"id,omitempty"`
+	ID         uuid.UUID `json:"id,omitempty"`
 	Name       string    `json:"name,omitempty"`
-	CustomerID string    `json:"customer_id,omitempty"`
+	CustomerID uuid.UUID `json:"customer_id,omitempty"`
 	CreatedAt  time.Time `json:"created_at,omitzero"`
 	UpdatedAt  time.Time `json:"updated_at,omitzero"`
 }
 
 func (dh *DeviceHandler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	deviceId := chi.URLParam(r, "id")
+	if deviceId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		return
+	}
+
+	id, err := uuid.Parse(deviceId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
 		return
 	}
 
@@ -223,13 +242,19 @@ func (dh *DeviceHandler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 }
 
 func (dh *DeviceHandler) DeleteDevice(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	if id == "" {
+	deviceId := chi.URLParam(r, "id")
+	if deviceId == "" {
 		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
 		return
 	}
 
-	err := dh.svc.DeleteDevice(r.Context(), id)
+	id, err := uuid.Parse(deviceId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		return
+	}
+
+	err = dh.svc.DeleteDevice(r.Context(), id)
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:

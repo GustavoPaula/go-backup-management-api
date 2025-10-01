@@ -6,6 +6,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/google/uuid"
 )
 
 type backupPlanService struct {
@@ -55,7 +56,7 @@ func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *
 	return backupPlan, nil
 }
 
-func (bps *backupPlanService) GetBackupPlan(ctx context.Context, id string) (*domain.BackupPlan, error) {
+func (bps *backupPlanService) GetBackupPlan(ctx context.Context, id uuid.UUID) (*domain.BackupPlan, error) {
 	backupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrDataNotFound) {
@@ -67,7 +68,7 @@ func (bps *backupPlanService) GetBackupPlan(ctx context.Context, id string) (*do
 	return backupPlan, nil
 }
 
-func (bps *backupPlanService) ListBackupPlans(ctx context.Context, page, limit int64) ([]domain.BackupPlan, error) {
+func (bps *backupPlanService) ListBackupPlans(ctx context.Context, page, limit int) ([]domain.BackupPlan, error) {
 	var backupPlans []domain.BackupPlan
 
 	backupPlans, err := bps.backupPlanRepo.ListBackupPlans(ctx, page, limit)
@@ -95,7 +96,7 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 		backupPlan.BackupSizeBytes = existingBackupPlan.BackupSizeBytes
 	}
 
-	if backupPlan.DeviceID == "" {
+	if backupPlan.DeviceID == uuid.Nil {
 		backupPlan.DeviceID = existingBackupPlan.DeviceID
 	}
 
@@ -107,7 +108,7 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 	return updateBackupPlan, nil
 }
 
-func (bps *backupPlanService) DeleteBackupPlan(ctx context.Context, id string) error {
+func (bps *backupPlanService) DeleteBackupPlan(ctx context.Context, id uuid.UUID) error {
 	backupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrDataNotFound) {

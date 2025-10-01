@@ -6,6 +6,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/google/uuid"
 )
 
 type deviceService struct {
@@ -39,7 +40,7 @@ func (ds *deviceService) CreateDevice(ctx context.Context, device *domain.Device
 	return device, nil
 }
 
-func (ds *deviceService) GetDevice(ctx context.Context, id string) (*domain.Device, error) {
+func (ds *deviceService) GetDevice(ctx context.Context, id uuid.UUID) (*domain.Device, error) {
 	device, err := ds.deviceRepo.GetDeviceByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrDataNotFound) {
@@ -93,7 +94,7 @@ func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device
 	return updateDevice, nil
 }
 
-func (ds *deviceService) DeleteDevice(ctx context.Context, id string) error {
+func (ds *deviceService) DeleteDevice(ctx context.Context, id uuid.UUID) error {
 	existingDevice, err := ds.deviceRepo.GetDeviceByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, domain.ErrDataNotFound) {

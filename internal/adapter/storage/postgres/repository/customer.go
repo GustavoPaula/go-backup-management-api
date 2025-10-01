@@ -7,6 +7,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -47,7 +48,7 @@ func (cr *customerRepository) CreateCustomer(ctx context.Context, customer *doma
 	return customer, nil
 }
 
-func (cr *customerRepository) GetCustomerByID(ctx context.Context, id string) (*domain.Customer, error) {
+func (cr *customerRepository) GetCustomerByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {
 	var customer domain.Customer
 
 	query := `
@@ -164,7 +165,7 @@ func (cr *customerRepository) UpdateCustomer(ctx context.Context, customer *doma
 	return customer, nil
 }
 
-func (cr *customerRepository) DeleteCustomer(ctx context.Context, id string) error {
+func (cr *customerRepository) DeleteCustomer(ctx context.Context, id uuid.UUID) error {
 	query := `
 		DELETE FROM customers
 		WHERE id = $1
