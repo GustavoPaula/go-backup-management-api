@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
@@ -43,7 +42,7 @@ func (ds *deviceService) CreateDevice(ctx context.Context, device *domain.Device
 func (ds *deviceService) GetDevice(ctx context.Context, id uuid.UUID) (*domain.Device, error) {
 	device, err := ds.deviceRepo.GetDeviceByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -66,7 +65,7 @@ func (ds *deviceService) ListDevices(ctx context.Context, page, limit int) ([]do
 func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
 	existingDevice, err := ds.deviceRepo.GetDeviceByID(ctx, device.ID)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -78,7 +77,7 @@ func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device
 
 	customer, err := ds.customerRepo.GetCustomerByID(ctx, device.CustomerID)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -97,7 +96,7 @@ func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device
 func (ds *deviceService) DeleteDevice(ctx context.Context, id uuid.UUID) error {
 	existingDevice, err := ds.deviceRepo.GetDeviceByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return err
 		}
 		return domain.ErrInternal

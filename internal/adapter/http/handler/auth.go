@@ -1,13 +1,14 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/validator"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 )
 
@@ -29,25 +30,32 @@ type loginRequest struct {
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var body loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		response.JSON(w, http.StatusBadRequest, "json inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
+	defer r.Body.Close()
 
 	if err := validator.UsernameValidate(body.Username); err != nil {
-		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Username inválido", nil, err.Error())
 		return
 	}
 
 	if err := validator.PasswordValidate(body.Password); err != nil {
-		response.JSON(w, http.StatusBadRequest, "body inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Password inválido", nil, err.Error())
 		return
 	}
 
-	token, err := ah.svc.Login(context.Background(), body.Username, body.Password)
+	token, err := ah.svc.Login(r.Context(), body.Username, body.Password)
 	if err != nil {
-		response.JSON(w, http.StatusUnauthorized, "falha ao fazer login", nil, err.Error())
+		if err == domain.ErrDataNotFound || err == domain.ErrInvalidCredentials {
+			response.JSON(w, http.StatusUnauthorized, "Credenciais inválidas", nil, err.Error())
+			return
+		}
+
+		slog.Error("Login error", "error", err, "username", body.Username)
+		response.JSON(w, http.StatusInternalServerError, "Erro interno", nil, nil)
 		return
 	}
 
-	response.JSON(w, http.StatusOK, "autenticado com sucesso", token, nil)
+	response.JSON(w, http.StatusOK, "Autenticado com sucesso", token, nil)
 }

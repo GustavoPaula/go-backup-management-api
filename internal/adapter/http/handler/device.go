@@ -39,13 +39,14 @@ type createDeviceResponse struct {
 func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 	var req createDeviceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, err.Error())
 		return
 	}
+	defer r.Body.Close()
 
 	customerId, err := uuid.Parse(req.CustomerID)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
@@ -57,14 +58,11 @@ func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 	newDevice, err := dh.svc.CreateDevice(r.Context(), &device)
 	if err != nil {
 		switch err {
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar cliente", nil, err.Error())
-			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar cliente", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Erro ao vincular dispositivo com cliente inexistente", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
@@ -77,7 +75,7 @@ func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:  newDevice.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusCreated, "dispositivo criado com sucesso!", res, nil)
+	response.JSON(w, http.StatusCreated, "Dispositivo vinculado com sucesso", res, nil)
 }
 
 type getDeviceResponse struct {
@@ -91,13 +89,13 @@ type getDeviceResponse struct {
 func (dh *DeviceHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 	deviceId := chi.URLParam(r, "id")
 	if deviceId == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "ID do dispostivo é obrigatório", nil, nil)
 		return
 	}
 
 	id, err := uuid.Parse(deviceId)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
@@ -105,10 +103,10 @@ func (dh *DeviceHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao obter dispositivo", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Erro ao obter dispositivo", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
@@ -121,7 +119,7 @@ func (dh *DeviceHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:  device.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusOK, "usuário encontrado!", res, nil)
+	response.JSON(w, http.StatusOK, "Dispositivo encontrado", res, nil)
 }
 
 type listDevicesResponse struct {
@@ -137,19 +135,19 @@ func (dh *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 
 	if pageStr == "" || limitStr == "" {
-		response.JSON(w, http.StatusBadRequest, "page e limit são obrigatórios", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "Page e limit são obrigatórios", nil, nil)
 		return
 	}
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "page inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Page inválido", nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "limit inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "Limit inválido", nil, nil)
 		return
 	}
 
@@ -157,7 +155,7 @@ func (dh *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, nil)
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, nil)
 			return
 		}
 	}
@@ -173,7 +171,7 @@ func (dh *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	response.JSON(w, http.StatusOK, "usuários encontrados!", list, nil)
+	response.JSON(w, http.StatusOK, "Lista de dispositivos", list, nil)
 }
 
 type updateDeviceRequest struct {
@@ -192,21 +190,22 @@ type updateDeviceResponse struct {
 func (dh *DeviceHandler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 	deviceId := chi.URLParam(r, "id")
 	if deviceId == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "ID do dispositivo é obrigatório", nil, nil)
 		return
 	}
 
 	id, err := uuid.Parse(deviceId)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
 	var req updateDeviceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "erro ao converter para JSON", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
+	defer r.Body.Close()
 
 	device := domain.Device{
 		ID:         id,
@@ -219,13 +218,10 @@ func (dh *DeviceHandler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro atualizar dispositivo", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusBadRequest, "erro atualizar dispositivo", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Dispositivo não encontrado", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
@@ -238,19 +234,19 @@ func (dh *DeviceHandler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt:  updateDevice.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusOK, "dispositivo alterado com sucesso", res, nil)
+	response.JSON(w, http.StatusOK, "Dispositivo atualizado", res, nil)
 }
 
 func (dh *DeviceHandler) DeleteDevice(w http.ResponseWriter, r *http.Request) {
 	deviceId := chi.URLParam(r, "id")
 	if deviceId == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "ID do dispositivo é obrigatório", nil, nil)
 		return
 	}
 
 	id, err := uuid.Parse(deviceId)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
@@ -258,13 +254,13 @@ func (dh *DeviceHandler) DeleteDevice(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao deletar dispositivo", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Dispositivo não encontrado", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
 
-	response.JSON(w, http.StatusOK, "dispositivo deletado com sucesso!", nil, nil)
+	response.JSON(w, http.StatusOK, "Dispositivo deletado com sucesso", nil, nil)
 }

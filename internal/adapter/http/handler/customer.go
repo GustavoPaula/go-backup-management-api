@@ -37,7 +37,7 @@ type createCustomerResponse struct {
 func (ch *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request) {
 	var req createCustomerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
 
@@ -49,13 +49,10 @@ func (ch *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch err {
 		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar cliente", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao criar cliente", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Cliente já cadastrado", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
@@ -67,7 +64,7 @@ func (ch *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request
 		UpdatedAt: newCustomer.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusCreated, "cliente criado com sucesso!", res, nil)
+	response.JSON(w, http.StatusCreated, "Cliente cadastrado com sucesso", res, nil)
 }
 
 type getCustomerResponse struct {
@@ -80,13 +77,13 @@ type getCustomerResponse struct {
 func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 	customerId := chi.URLParam(r, "id")
 	if customerId == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "ID do cliente é obrigatório", nil, nil)
 		return
 	}
 
 	id, err := uuid.Parse(customerId)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
@@ -94,10 +91,10 @@ func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao obter cliente", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Erro ao buscar cliente", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
@@ -109,7 +106,7 @@ func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: customer.UpdatedAt,
 	}
 
-	response.JSON(w, http.StatusOK, "cliente encontrado", res, nil)
+	response.JSON(w, http.StatusOK, "Cliente encontrado", res, nil)
 }
 
 type listCustomersResponse struct {
@@ -124,19 +121,19 @@ func (ch *CustomerHandler) ListCustomers(w http.ResponseWriter, r *http.Request)
 	limitStr := r.URL.Query().Get("limit")
 
 	if pageStr == "" || limitStr == "" {
-		response.JSON(w, http.StatusBadRequest, "page e limit são obrigatórios", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "Page e limit são obrigatórios", nil, nil)
 		return
 	}
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "page inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Page inválido", nil, err.Error())
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "limit inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "Limit inválido", nil, nil)
 		return
 	}
 
@@ -144,7 +141,7 @@ func (ch *CustomerHandler) ListCustomers(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		switch err {
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, nil)
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, nil)
 			return
 		}
 	}
@@ -159,7 +156,7 @@ func (ch *CustomerHandler) ListCustomers(w http.ResponseWriter, r *http.Request)
 		})
 	}
 
-	response.JSON(w, http.StatusOK, "clientes encontrados!", list, nil)
+	response.JSON(w, http.StatusOK, "Lista de clientes", list, nil)
 }
 
 type updateCustomerRequest struct {
@@ -176,21 +173,22 @@ type updateCustomerResponse struct {
 func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request) {
 	customerId := chi.URLParam(r, "id")
 	if customerId == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "ID do cliente é obrigatório", nil, nil)
 		return
 	}
 
 	id, err := uuid.Parse(customerId)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
 	var req updateCustomerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusInternalServerError, "erro ao converter para JSON", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
+	defer r.Body.Close()
 
 	customer := domain.Customer{
 		ID:   id,
@@ -202,13 +200,13 @@ func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro atualizar cliente", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Cliente não encontrado", nil, err.Error())
 			return
 		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusBadRequest, "erro atualizar cliente", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Cliente já cadastrado", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado!", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
@@ -226,13 +224,13 @@ func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request
 func (ch *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request) {
 	customerId := chi.URLParam(r, "id")
 	if customerId == "" {
-		response.JSON(w, http.StatusBadRequest, "id é obrigatório", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "ID do cliente é obrigatório", nil, nil)
 		return
 	}
 
 	id, err := uuid.Parse(customerId)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "uuid inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
@@ -240,16 +238,16 @@ func (ch *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		switch err {
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "erro ao deletar cliente", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Cliente não encontrado", nil, err.Error())
 			return
 		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "não é possível excluir o cliente porque existem dispositivos vinculados.", nil, err.Error())
+			response.JSON(w, http.StatusConflict, "Não é possível excluir o cliente porque existem dispositivos vinculados.", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "algo deu errado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
 	}
 
-	response.JSON(w, http.StatusOK, "cliente deletado com sucesso!", nil, nil)
+	response.JSON(w, http.StatusOK, "Cliente deletado com sucesso", nil, nil)
 }
