@@ -44,17 +44,14 @@ func New(config *config.Token) (port.TokenService, error) {
 }
 
 func getPersistentKey(config *config.Token) (paseto.V4SymmetricKey, error) {
-	// Prioridade 1: Variável de ambiente
 	if keyHex := config.KeyHex; keyHex != "" {
 		return keyFromHex(keyHex)
 	}
 
-	// Prioridade 2: Arquivo padrão
 	if key, err := keyFromFile("paseto.key"); err == nil {
 		return key, nil
 	}
 
-	// Gerar nova chave
 	return generateAndSaveKey("paseto.key")
 }
 
@@ -64,7 +61,6 @@ func keyFromHex(hexStr string) (paseto.V4SymmetricKey, error) {
 		return paseto.V4SymmetricKey{}, err
 	}
 
-	// A maneira correta de criar uma chave a partir de bytes
 	return paseto.V4SymmetricKeyFromBytes(keyBytes)
 }
 
@@ -79,8 +75,6 @@ func keyFromFile(filename string) (paseto.V4SymmetricKey, error) {
 
 func generateAndSaveKey(filename string) (paseto.V4SymmetricKey, error) {
 	key := paseto.NewV4SymmetricKey()
-
-	// Converter a chave para bytes usando o método correto
 	keyBytes := key.ExportBytes()
 	keyHex := hex.EncodeToString(keyBytes)
 
@@ -114,8 +108,6 @@ func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
 	pt.token.SetIssuedAt(issuedAt)
 	pt.token.SetNotBefore(issuedAt)
 	pt.token.SetExpiration(expiredAt)
-
-	// Usar a chave diretamente (não é mais um ponteiro)
 	token := pt.token.V4Encrypt(pt.key, nil)
 
 	return token, nil
@@ -123,8 +115,6 @@ func (pt *PasetoToken) CreateToken(user *domain.User) (string, error) {
 
 func (pt *PasetoToken) VerifyToken(token string) (*domain.TokenPayload, error) {
 	var payload *domain.TokenPayload
-
-	// Usar a chave diretamente (não é mais um ponteiro)
 	parsedToken, err := pt.parser.ParseV4Local(pt.key, token, nil)
 	if err != nil {
 		if err.Error() == "this token has expired" {

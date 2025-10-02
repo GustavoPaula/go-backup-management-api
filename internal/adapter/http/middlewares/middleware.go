@@ -13,15 +13,11 @@ import (
 type contextKey string
 
 const (
-	// authorizationHeaderKey is the key for authorization header in the request
-	authorizationHeaderKey = "authorization"
-	// authorizationType is the accepted authorization type
-	authorizationType = "bearer"
-	// authorizationPayloadKey is the key for authorization payload in the context
+	authorizationHeaderKey  = "authorization"
+	authorizationType       = "bearer"
 	authorizationPayloadKey = contextKey("authorization_payload")
 )
 
-// authMiddleware is a middleware to check if the user is authenticated
 func AuthMiddleware(token port.TokenService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -53,14 +49,12 @@ func AuthMiddleware(token port.TokenService) func(http.Handler) http.Handler {
 				return
 			}
 
-			// Adiciona o payload ao contexto da requisição
 			ctx := context.WithValue(r.Context(), authorizationPayloadKey, payload)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-// adminMiddleware is a middleware to check if the user is an admin
 func AdminMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
