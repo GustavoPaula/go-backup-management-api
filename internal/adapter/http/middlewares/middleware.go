@@ -25,27 +25,27 @@ func AuthMiddleware(token port.TokenService) func(http.Handler) http.Handler {
 
 			isEmpty := len(authorizationHeader) == 0
 			if isEmpty {
-				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrEmptyAuthorizationHeader.Error())
+				response.JSON(w, http.StatusUnauthorized, "Falha na autenticação!", nil, domain.ErrEmptyAuthorizationHeader.Error())
 				return
 			}
 
 			fields := strings.Fields(authorizationHeader)
 			isValid := len(fields) == 2
 			if !isValid {
-				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrInvalidAuthorizationHeader.Error())
+				response.JSON(w, http.StatusUnauthorized, "Falha na autenticação!", nil, domain.ErrInvalidAuthorizationHeader.Error())
 				return
 			}
 
 			currentAuthorizationType := strings.ToLower(fields[0])
 			if currentAuthorizationType != authorizationType {
-				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrInvalidAuthorizationHeader.Error())
+				response.JSON(w, http.StatusUnauthorized, "Falha na autenticação!", nil, domain.ErrInvalidAuthorizationHeader.Error())
 				return
 			}
 
 			accessToken := fields[1]
 			payload, err := token.VerifyToken(accessToken)
 			if err != nil {
-				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrUnauthorized.Error())
+				response.JSON(w, http.StatusUnauthorized, "Falha na autenticação!", nil, domain.ErrUnauthorized.Error())
 				return
 			}
 
@@ -60,13 +60,13 @@ func AdminMiddleware() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			payload, ok := r.Context().Value(authorizationPayloadKey).(*domain.TokenPayload)
 			if !ok {
-				response.JSON(w, http.StatusUnauthorized, "falha na autenticação!", nil, domain.ErrInvalidAuthorizationPayload.Error())
+				response.JSON(w, http.StatusUnauthorized, "Falha na autenticação!", nil, domain.ErrInvalidAuthorizationPayload.Error())
 				return
 			}
 
 			isAdmin := payload.Role == domain.Admin
 			if !isAdmin {
-				response.JSON(w, http.StatusForbidden, "falha na autenticação!", nil, domain.ErrForbidden.Error())
+				response.JSON(w, http.StatusForbidden, "Falha na autenticação!", nil, domain.ErrForbidden.Error())
 				return
 			}
 

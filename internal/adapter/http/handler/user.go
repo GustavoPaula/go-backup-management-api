@@ -50,24 +50,24 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	if err := validator.UsernameValidate(req.Username); err != nil {
-		response.JSON(w, http.StatusUnprocessableEntity, "Username inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Username inválido", nil, err.Error())
 		return
 	}
 
 	if err := validator.PasswordValidate(req.Password); err != nil {
-		response.JSON(w, http.StatusUnprocessableEntity, "Password inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Password inválido", nil, err.Error())
 		return
 	}
 
 	email, err := validator.EmailValidate(req.Email)
 	if err != nil {
-		response.JSON(w, http.StatusUnprocessableEntity, "Email inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Email inválido", nil, err.Error())
 		return
 	}
 
 	role, err := validator.UserRoleValidate(req.Role)
 	if err != nil {
-		response.JSON(w, http.StatusUnprocessableEntity, "User role inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "User role inválido", nil, err.Error())
 		return
 	}
 
