@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
@@ -30,7 +29,7 @@ func NewBackupPlanService(
 func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error) {
 	customer, err := bps.customerRepo.GetCustomerByID(ctx, backupPlan.Customer.ID)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -40,7 +39,7 @@ func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *
 
 	device, err := bps.deviceRepo.GetDeviceByID(ctx, backupPlan.DeviceID)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -59,7 +58,7 @@ func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *
 func (bps *backupPlanService) GetBackupPlan(ctx context.Context, id uuid.UUID) (*domain.BackupPlan, error) {
 	backupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -82,7 +81,7 @@ func (bps *backupPlanService) ListBackupPlans(ctx context.Context, page, limit i
 func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error) {
 	existingBackupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, backupPlan.ID)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return nil, err
 		}
 		return nil, domain.ErrInternal
@@ -111,7 +110,7 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 func (bps *backupPlanService) DeleteBackupPlan(ctx context.Context, id uuid.UUID) error {
 	backupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, domain.ErrDataNotFound) {
+		if err == domain.ErrDataNotFound {
 			return err
 		}
 		return domain.ErrInternal
