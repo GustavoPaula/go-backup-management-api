@@ -77,6 +77,34 @@ func (dr *deviceRepository) GetDeviceByID(ctx context.Context, id uuid.UUID) (*d
 	return &device, nil
 }
 
+func (dr *deviceRepository) GetDeviceByCustomerID(ctx context.Context, id uuid.UUID) (*domain.Device, error) {
+	var device domain.Device
+
+	query := `
+		SELECT id, name, customer_id, created_at, updated_at
+		FROM devices
+		WHERE customer_id = $1
+	`
+
+	err := dr.db.QueryRow(ctx, query, id).Scan(
+		&device.ID,
+		&device.Name,
+		&device.CustomerID,
+		&device.CreatedAt,
+		&device.UpdatedAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, domain.ErrDataNotFound
+		}
+		slog.Error("Erro ao buscar dispositivo pelo customer_id", "error", err.Error())
+		return nil, err
+	}
+
+	return &device, nil
+}
+
 func (dr *deviceRepository) ListDevices(ctx context.Context, page, limit int) ([]domain.Device, error) {
 	var device domain.Device
 	var devices []domain.Device

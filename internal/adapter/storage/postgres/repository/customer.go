@@ -102,31 +102,6 @@ func (cr *customerRepository) GetCustomerByName(ctx context.Context, name string
 	return &customer, nil
 }
 
-func (cr *customerRepository) GetCustomerLinkedDevices(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
-	var device domain.Device
-
-	query := `
-		SELECT customer_id
-		FROM devices
-		WHERE customer_id = $1
-		LIMIT 1
-	`
-
-	err := cr.db.QueryRow(ctx, query, id).Scan(
-		&device.CustomerID,
-	)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return uuid.Nil, domain.ErrDataNotFound
-		}
-		slog.Error("Erro ao buscar customer", "error", err.Error())
-		return uuid.Nil, err
-	}
-
-	return id, nil
-}
-
 func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int) ([]domain.Customer, error) {
 	var customer domain.Customer
 	var customers []domain.Customer

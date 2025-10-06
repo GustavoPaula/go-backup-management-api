@@ -46,18 +46,17 @@ func main() {
 	healthyHandler := handler.NewHealthCheckHandler()
 
 	userRepo := repository.NewUserRepository(db)
-	userSvc := service.NewUserService(userRepo)
-	userHandler := handler.NewUserHandler(userSvc)
-
-	authService := service.NewAuthService(userRepo, token)
-	authHandler := handler.NewAuthHandler(authService)
-
-	customerRepo := repository.NewCustomerRepository(db)
-	customerSvc := service.NewCustomerService(customerRepo)
-	customerHandler := handler.NewCustomerHandler(customerSvc)
-
 	deviceRepo := repository.NewDeviceRepository(db)
+	customerRepo := repository.NewCustomerRepository(db)
+
+	userSvc := service.NewUserService(userRepo)
+	authSvc := service.NewAuthService(userRepo, token)
+	customerSvc := service.NewCustomerService(customerRepo, deviceRepo)
 	deviceSvc := service.NewDeviceService(deviceRepo, customerRepo)
+
+	userHandler := handler.NewUserHandler(userSvc)
+	authHandler := handler.NewAuthHandler(authSvc)
+	customerHandler := handler.NewCustomerHandler(customerSvc)
 	deviceHandler := handler.NewDeviceHandler(deviceSvc)
 
 	router := router.NewRouter(

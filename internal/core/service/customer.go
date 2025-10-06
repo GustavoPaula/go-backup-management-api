@@ -10,12 +10,14 @@ import (
 )
 
 type customerService struct {
-	repo port.CustomerRepository
+	repo       port.CustomerRepository
+	deviceRepo port.DeviceRepository
 }
 
-func NewCustomerService(repo port.CustomerRepository) port.CustomerService {
+func NewCustomerService(repo port.CustomerRepository, deviceRepo port.DeviceRepository) port.CustomerService {
 	return &customerService{
 		repo,
+		deviceRepo,
 	}
 }
 
@@ -104,7 +106,7 @@ func (cs *customerService) DeleteCustomer(ctx context.Context, id uuid.UUID) err
 		return domain.ErrInternal
 	}
 
-	existingCustomerSameDevices, err := cs.repo.GetCustomerLinkedDevices(ctx, id)
+	existingCustomerSameDevices, err := cs.deviceRepo.GetDeviceByCustomerID(ctx, id)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			return err
@@ -112,7 +114,7 @@ func (cs *customerService) DeleteCustomer(ctx context.Context, id uuid.UUID) err
 		return domain.ErrInternal
 	}
 
-	if existingCustomerSameDevices != uuid.Nil {
+	if existingCustomerSameDevices != nil {
 		return domain.ErrConflictingData
 	}
 
