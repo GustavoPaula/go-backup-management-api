@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres"
@@ -28,6 +29,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 	}
 	defer func() {
 		if err != nil {
+			slog.Error("Erro no repo", "error", err)
 			_ = tx.Rollback(ctx)
 		} else {
 			_ = tx.Commit(ctx)
@@ -39,6 +41,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`, backupPlan.ID, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, now)
 	if err != nil {
+		slog.Error("Erro no svc", "error", err)
 		return nil, err
 	}
 
@@ -52,6 +55,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 			VALUES ($1, $2, $3, $4, $5)
 		`, day.Day, day.TimeDay, day.BackupPlanID, day.CreatedAt, day.UpdatedAt)
 		if err != nil {
+			slog.Error("Erro no svc", "error", err)
 			return nil, err
 		}
 	}

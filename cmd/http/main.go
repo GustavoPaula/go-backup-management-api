@@ -48,16 +48,19 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	deviceRepo := repository.NewDeviceRepository(db)
 	customerRepo := repository.NewCustomerRepository(db)
+	backupPlanRepo := repository.NewBackupPlanRepository(db)
 
 	userSvc := service.NewUserService(userRepo)
 	authSvc := service.NewAuthService(userRepo, token)
 	customerSvc := service.NewCustomerService(customerRepo, deviceRepo)
 	deviceSvc := service.NewDeviceService(deviceRepo, customerRepo)
+	backupPlanSvc := service.NewBackupPlanService(customerRepo, deviceRepo, backupPlanRepo)
 
 	userHandler := handler.NewUserHandler(userSvc)
 	authHandler := handler.NewAuthHandler(authSvc)
 	customerHandler := handler.NewCustomerHandler(customerSvc)
 	deviceHandler := handler.NewDeviceHandler(deviceSvc)
+	backupPlanHandler := handler.NewBackupPlanHandler(backupPlanSvc)
 
 	router := router.NewRouter(
 		token,
@@ -66,6 +69,7 @@ func main() {
 		*authHandler,
 		*customerHandler,
 		*deviceHandler,
+		*backupPlanHandler,
 	)
 
 	if err := router.Serve(ctx, config.HTTP); err != nil {

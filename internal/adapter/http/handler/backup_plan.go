@@ -62,7 +62,7 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 			return
 		}
 
-		response.JSON(w, http.StatusInternalServerError, "Erro ao criar plano de backup", nil, nil)
+		response.JSON(w, http.StatusInternalServerError, "Erro ao criar plano de backup", nil, err.Error())
 		return
 	}
 

@@ -27,6 +27,7 @@ func NewRouter(
 	authHandler handler.AuthHandler,
 	customerHandler handler.CustomerHandler,
 	deviceHandler handler.DeviceHandler,
+	backupPlanHandler handler.BackupPlanHandler,
 ) *router {
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
@@ -68,6 +69,8 @@ func NewRouter(
 		r.Get("/devices", deviceHandler.ListDevices)
 		r.Put("/devices/{id}", deviceHandler.UpdateDevice)
 		r.Delete("/devices/{id}", deviceHandler.DeleteDevice)
+
+		r.Post("/backup_plan", backupPlanHandler.CreateBackupPlan)
 	})
 
 	return &router{

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -54,6 +55,8 @@ func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 		Name:       req.Name,
 		CustomerID: customerId,
 	}
+
+	fmt.Println(device.Customer)
 
 	newDevice, err := dh.svc.CreateDevice(r.Context(), &device)
 	if err != nil {
