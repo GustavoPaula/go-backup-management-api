@@ -13,5 +13,5 @@ type BackupPlanWeekDay struct {
 	BackupPlanID uuid.UUID
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
-	BackupPlan   *BackupPlan
+	//BackupPlan   *BackupPlan
 }

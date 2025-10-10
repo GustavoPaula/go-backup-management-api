@@ -42,6 +42,7 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 	defer r.Body.Close()
 
 	backupPlan := &domain.BackupPlan{
+		ID:              uuid.New(),
 		Name:            req.Name,
 		BackupSizeBytes: req.BackupSizeBytes,
 		DeviceID:        req.DeviceID,
@@ -50,8 +51,10 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 	backupPlan.WeekDay = make([]domain.BackupPlanWeekDay, len(req.WeekDay))
 	for i, wdReq := range req.WeekDay {
 		backupPlan.WeekDay[i] = domain.BackupPlanWeekDay{
-			Day:     wdReq.Day,
-			TimeDay: wdReq.TimeDay,
+			ID:           uuid.New(),
+			Day:          wdReq.Day,
+			TimeDay:      wdReq.TimeDay,
+			BackupPlanID: backupPlan.ID,
 		}
 	}
 

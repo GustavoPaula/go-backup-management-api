@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"time"
 
@@ -21,45 +22,82 @@ func NewBackupPlanRepository(db *postgres.DB) *backupPlanRepository {
 	}
 }
 
-func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error) {
-	now := time.Now()
-	tx, err := bpr.db.BeginTx(ctx, pgx.TxOptions{})
+// Transaction helper
+func (bpr *backupPlanRepository) WithTransaction(ctx context.Context, fn func(pgx.Tx) error) error {
+	tx, err := bpr.db.Begin(ctx)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
+
 	defer func() {
-		if err != nil {
-			slog.Error("Erro no repo", "error", err)
+		if p := recover(); p != nil {
+			_ = tx.Rollback(ctx)
+			panic(p)
+		} else if err != nil {
 			_ = tx.Rollback(ctx)
 		} else {
-			_ = tx.Commit(ctx)
+			err = tx.Commit(ctx)
 		}
 	}()
 
-	_, err = tx.Exec(ctx, `
-		INSERT INTO backup_plans (id, name, backup_size_bytes, device_id, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`, backupPlan.ID, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, now)
+	if err := fn(tx); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Repository usando o helper
+func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error) {
+	now := time.Now()
+
+	err := bpr.WithTransaction(ctx, func(tx pgx.Tx) error {
+		// Inserir backup plan
+		queryPlan := `
+			INSERT INTO backup_plans (id, name, backup_size_bytes, device_id, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+		`
+		result, err := tx.Exec(ctx, queryPlan, backupPlan.ID, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, now)
+		if err != nil {
+			slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
+			return err
+		}
+
+		if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+			slog.Error("Nenhuma linha foi inserida", "error", err)
+			return err
+		}
+
+		queryWeek := `
+			INSERT INTO backup_plans_week_day (id, day, time_day, backup_plan_id, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6)
+		`
+		for _, day := range backupPlan.WeekDay {
+			day.CreatedAt = now
+			day.UpdatedAt = now
+			day.BackupPlanID = backupPlan.ID
+
+			result, err := tx.Exec(ctx, queryWeek, day.ID, day.Day, day.TimeDay, day.BackupPlanID, day.CreatedAt, day.UpdatedAt)
+			if err != nil {
+				slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
+				return err
+			}
+
+			if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+				slog.Error("Nenhuma linha foi inserida", "error", err)
+				return err
+			}
+		}
+
+		return nil
+	})
+
 	if err != nil {
-		slog.Error("Erro no svc", "error", err)
 		return nil, err
 	}
 
-	for _, day := range backupPlan.WeekDay {
-		day.BackupPlanID = backupPlan.ID
-		day.CreatedAt = now
-		day.UpdatedAt = now
-
-		_, err = tx.Exec(ctx, `
-			INSERT INTO backup_plan_week_days (day, time_day, backup_plan_id, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5)
-		`, day.Day, day.TimeDay, day.BackupPlanID, day.CreatedAt, day.UpdatedAt)
-		if err != nil {
-			slog.Error("Erro no svc", "error", err)
-			return nil, err
-		}
-	}
-
+	backupPlan.CreatedAt = now
+	backupPlan.UpdatedAt = now
 	return backupPlan, nil
 }
 

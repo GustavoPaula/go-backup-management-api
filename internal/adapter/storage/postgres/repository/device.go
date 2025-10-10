@@ -70,7 +70,6 @@ func (dr *deviceRepository) GetDeviceByID(ctx context.Context, id uuid.UUID) (*d
 		if err == pgx.ErrNoRows {
 			return nil, domain.ErrDataNotFound
 		}
-		slog.Error("Erro ao buscar usuário pelo username", "error", err.Error())
 		return nil, err
 	}
 
