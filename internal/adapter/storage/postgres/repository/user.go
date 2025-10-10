@@ -254,12 +254,7 @@ func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 		DELETE FROM users
 		WHERE id = $1
 	`
-	_, err := ur.db.Exec(ctx, query, id)
-	if err == pgx.ErrNoRows {
-		slog.Error("Nenhum registro encontrado", "error", err)
-		return domain.ErrDataNotFound
-	}
-
+	result, err := ur.db.Exec(ctx, query, id)
 	if err := handleDatabaseError(err); err != nil {
 		switch err {
 		case domain.ErrBadRequest:
@@ -273,6 +268,11 @@ func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 		default:
 			return domain.ErrInternal
 		}
+	}
+
+	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+		slog.Error("Nenhuma linha foi inserida", "error", err)
+		return domain.ErrDataNotFound
 	}
 
 	return nil

@@ -324,5 +324,5 @@ func (uh *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	response.JSON(w, http.StatusOK, "Usuário deletado com sucesso", nil, nil)
+	response.JSON(w, http.StatusNoContent, "Usuário deletado com sucesso", nil, nil)
 }
