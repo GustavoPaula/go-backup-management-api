@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -74,19 +73,19 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch err {
 		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusConflict, "Falha ao criar usuário", nil, err.Error())
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
 			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusConflict, "Falha ao criar usuário", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
 			return
 		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Usuário já cadastrado", nil, err.Error())
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
 			return
 		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusConflict, "Falha ao criar usuário", nil, err.Error())
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
@@ -105,11 +104,6 @@ type getUserResponse struct {
 
 func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "id")
-	if userId == "" {
-		response.JSON(w, http.StatusBadRequest, "ID do usuário é obrigatório", nil, nil)
-		return
-	}
-
 	id, err := uuid.Parse(userId)
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
@@ -119,12 +113,20 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	user, err := uh.svc.GetUser(r.Context(), id)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "Erro ao obter usuário", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			slog.Error("Login error", "error", err, "username", user.Username)
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
@@ -174,8 +176,20 @@ func (uh *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	users, err := uh.svc.ListUsers(r.Context(), page, limit)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
+		case domain.ErrDataNotFound:
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
+			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, nil)
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
@@ -202,22 +216,8 @@ type updateUserRequest struct {
 	Role     string `json:"role"`
 }
 
-type updateUserResponse struct {
-	ID        uuid.UUID       `json:"id"`
-	Username  string          `json:"username"`
-	Email     string          `json:"email"`
-	Role      domain.UserRole `json:"role"`
-	CreatedAt time.Time       `json:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at"`
-}
-
 func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "id")
-	if userId == "" {
-		response.JSON(w, http.StatusBadRequest, "ID do usuário é obrigatório", nil, nil)
-		return
-	}
-
 	id, err := uuid.Parse(userId)
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
@@ -271,39 +271,32 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Role:     domain.UserRole(req.Role),
 	}
 
-	updateUser, err := uh.svc.UpdateUser(r.Context(), &user)
-
+	err = uh.svc.UpdateUser(r.Context(), &user)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "Erro atualizar usuário", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			slog.Error("Update User error", "error", err, "username", user.Username)
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
 
-	res := updateUserResponse{
-		ID:        updateUser.ID,
-		Email:     updateUser.Email,
-		Username:  updateUser.Username,
-		Role:      updateUser.Role,
-		CreatedAt: updateUser.CreatedAt,
-		UpdatedAt: updateUser.UpdatedAt,
-	}
-
-	response.JSON(w, http.StatusOK, "Usuário atualizado", res, nil)
+	response.JSON(w, http.StatusNoContent, "Usuário atualizado", nil, nil)
 }
 
 func (uh *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userId := chi.URLParam(r, "id")
-	if userId == "" {
-		response.JSON(w, http.StatusBadRequest, "ID do usuário é obrigatório", nil, nil)
-		return
-	}
-
 	id, err := uuid.Parse(userId)
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
@@ -313,12 +306,20 @@ func (uh *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	err = uh.svc.DeleteUser(r.Context(), id)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "Usuário não encontrado", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			slog.Error("Login error", "error", err)
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}

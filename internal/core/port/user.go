@@ -13,7 +13,7 @@ type UserRepository interface {
 	GetUserByUsername(ctx context.Context, username string) (*domain.User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	ListUsers(ctx context.Context, page, limit int) ([]domain.User, error)
-	UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error)
+	UpdateUser(ctx context.Context, user *domain.User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 }
 
@@ -21,6 +21,6 @@ type UserService interface {
 	Register(ctx context.Context, user *domain.User) error
 	GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	ListUsers(ctx context.Context, page, limit int) ([]domain.User, error)
-	UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error)
+	UpdateUser(ctx context.Context, user *domain.User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 }

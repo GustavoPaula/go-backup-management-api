@@ -72,34 +72,34 @@ func (us *userService) ListUsers(ctx context.Context, page, limit int) ([]domain
 	return users, nil
 }
 
-func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (us *userService) UpdateUser(ctx context.Context, user *domain.User) error {
 	existingUser, err := us.repo.GetUserByID(ctx, user.ID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
-			return nil, err
+			return err
 		}
-		return nil, domain.ErrInternal
+		return domain.ErrInternal
 	}
 
 	if user.Username != "" && user.Username != existingUser.Username {
 		userWithSameUsername, err := us.repo.GetUserByUsername(ctx, user.Username)
 		if err != nil && err != domain.ErrDataNotFound {
-			return nil, domain.ErrInternal
+			return domain.ErrInternal
 		}
 
 		if userWithSameUsername != nil && userWithSameUsername.ID != user.ID {
-			return nil, domain.ErrConflictingData
+			return domain.ErrConflictingData
 		}
 	}
 
 	if user.Email != "" && user.Email != existingUser.Email {
 		userWithSameEmail, err := us.repo.GetUserByEmail(ctx, user.Email)
 		if err != nil && err != domain.ErrDataNotFound {
-			return nil, domain.ErrInternal
+			return domain.ErrInternal
 		}
 
 		if userWithSameEmail != nil && userWithSameEmail.ID != user.ID {
-			return nil, domain.ErrConflictingData
+			return domain.ErrConflictingData
 		}
 	}
 
@@ -113,7 +113,7 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 	if user.Password != "" {
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
-			return nil, domain.ErrInternal
+			return domain.ErrInternal
 		}
 
 		user.Password = string(hashedPassword)
@@ -121,12 +121,12 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 		user.Password = existingUser.Password
 	}
 
-	updateUser, err := us.repo.UpdateUser(ctx, user)
+	err = us.repo.UpdateUser(ctx, user)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return domain.ErrInternal
 	}
 
-	return updateUser, nil
+	return nil
 }
 
 func (us *userService) DeleteUser(ctx context.Context, id uuid.UUID) error {

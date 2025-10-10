@@ -29,9 +29,7 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	result, err := ur.db.Exec(ctx, query, user.ID, user.Username, user.Email, user.Password, user.Role, now, now)
-
 	if err := handleDatabaseError(err); err != nil {
-		slog.Error("Erro ao criar usuário", "error", err)
 		switch err {
 		case domain.ErrBadRequest:
 			return domain.ErrBadRequest
@@ -73,12 +71,24 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 		&user.UpdatedAt,
 	)
 
-	if err != nil {
-		if err == pgx.ErrNoRows {
+	if err == pgx.ErrNoRows {
+		slog.Error("Nenhum registro encontrado", "error", err)
+		return nil, domain.ErrDataNotFound
+	}
+
+	if err := handleDatabaseError(err); err != nil {
+		switch err {
+		case domain.ErrBadRequest:
+			return nil, domain.ErrBadRequest
+		case domain.ErrConflictingData:
+			return nil, domain.ErrConflictingData
+		case domain.ErrDataNotFound:
 			return nil, domain.ErrDataNotFound
+		case domain.ErrServiceUnavailable:
+			return nil, domain.ErrServiceUnavailable
+		default:
+			return nil, domain.ErrInternal
 		}
-		slog.Error("Erro ao buscar usuário pelo ID", "error", err.Error())
-		return nil, err
 	}
 
 	return &user, nil
@@ -103,12 +113,24 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 		&user.UpdatedAt,
 	)
 
-	if err != nil {
-		if err == pgx.ErrNoRows {
+	if err == pgx.ErrNoRows {
+		slog.Error("Nenhum registro encontrado", "error", err)
+		return nil, domain.ErrDataNotFound
+	}
+
+	if err := handleDatabaseError(err); err != nil {
+		switch err {
+		case domain.ErrBadRequest:
+			return nil, domain.ErrBadRequest
+		case domain.ErrConflictingData:
+			return nil, domain.ErrConflictingData
+		case domain.ErrDataNotFound:
 			return nil, domain.ErrDataNotFound
+		case domain.ErrServiceUnavailable:
+			return nil, domain.ErrServiceUnavailable
+		default:
+			return nil, domain.ErrInternal
 		}
-		slog.Error("Erro ao buscar usuário pelo username", "error", err.Error())
-		return nil, err
 	}
 
 	return &user, nil
@@ -133,12 +155,24 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 		&user.UpdatedAt,
 	)
 
-	if err != nil {
-		if err == pgx.ErrNoRows {
+	if err == pgx.ErrNoRows {
+		slog.Error("Nenhum registro encontrado", "error", err)
+		return nil, domain.ErrDataNotFound
+	}
+
+	if err := handleDatabaseError(err); err != nil {
+		switch err {
+		case domain.ErrBadRequest:
+			return nil, domain.ErrBadRequest
+		case domain.ErrConflictingData:
+			return nil, domain.ErrConflictingData
+		case domain.ErrDataNotFound:
 			return nil, domain.ErrDataNotFound
+		case domain.ErrServiceUnavailable:
+			return nil, domain.ErrServiceUnavailable
+		default:
+			return nil, domain.ErrInternal
 		}
-		slog.Error("Erro ao buscar usuário por e-mail", "error", err.Error())
-		return nil, err
 	}
 
 	return &user, nil
@@ -184,33 +218,35 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 	return users, nil
 }
 
-func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) error {
 	query := `
 		UPDATE users
 		SET username = $1, email = $2, password = $3, role = $4, updated_at = $5
 		WHERE id = $6
-		RETURNING id, username, email, password, role, created_at, updated_at
 	`
 
-	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.Password, user.Role, time.Now(), user.ID).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.Password,
-		&user.Role,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, domain.ErrDataNotFound
+	result, err := ur.db.Exec(ctx, query, user.Username, user.Email, user.Password, user.Role, time.Now(), user.ID)
+	if err := handleDatabaseError(err); err != nil {
+		switch err {
+		case domain.ErrBadRequest:
+			return domain.ErrBadRequest
+		case domain.ErrConflictingData:
+			return domain.ErrConflictingData
+		case domain.ErrDataNotFound:
+			return domain.ErrDataNotFound
+		case domain.ErrServiceUnavailable:
+			return domain.ErrServiceUnavailable
+		default:
+			return domain.ErrInternal
 		}
-		slog.Error("Erro ao atualizar os dados do usuário", "error", err.Error())
-		return nil, err
 	}
 
-	return user, nil
+	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+		slog.Error("Nenhuma linha foi inserida", "error", err)
+		return domain.ErrDataNotFound
+	}
+
+	return nil
 }
 
 func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
@@ -219,8 +255,24 @@ func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 		WHERE id = $1
 	`
 	_, err := ur.db.Exec(ctx, query, id)
-	if err != nil {
-		return err
+	if err == pgx.ErrNoRows {
+		slog.Error("Nenhum registro encontrado", "error", err)
+		return domain.ErrDataNotFound
+	}
+
+	if err := handleDatabaseError(err); err != nil {
+		switch err {
+		case domain.ErrBadRequest:
+			return domain.ErrBadRequest
+		case domain.ErrConflictingData:
+			return domain.ErrConflictingData
+		case domain.ErrDataNotFound:
+			return domain.ErrDataNotFound
+		case domain.ErrServiceUnavailable:
+			return domain.ErrServiceUnavailable
+		default:
+			return domain.ErrInternal
+		}
 	}
 
 	return nil
