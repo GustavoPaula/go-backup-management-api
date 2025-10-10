@@ -25,28 +25,30 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 	now := time.Now()
 
 	query := `
-		INSERT INTO users (username, email, password, role, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, username, email, password, role, created_at, updated_at
+		INSERT INTO users (id, username, email, password, role, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
+	result, err := ur.db.Exec(ctx, query, user.ID, user.Username, user.Email, user.Password, user.Role, now, now)
 
-	err := ur.db.QueryRow(ctx, query, user.Username, user.Email, user.Password, user.Role, now, now).
-		Scan(
-			&user.ID,
-			&user.Username,
-			&user.Email,
-			&user.Password,
-			&user.Role,
-			&user.CreatedAt,
-			&user.UpdatedAt,
-		)
-
-	if err != nil {
-		if err == pgx.ErrNoRows {
-			return err
-		}
+	if err := handleDatabaseError(err); err != nil {
 		slog.Error("Erro ao criar usuário", "error", err)
-		return err
+		switch err {
+		case domain.ErrBadRequest:
+			return domain.ErrBadRequest
+		case domain.ErrConflictingData:
+			return domain.ErrConflictingData
+		case domain.ErrDataNotFound:
+			return domain.ErrDataNotFound
+		case domain.ErrServiceUnavailable:
+			return domain.ErrServiceUnavailable
+		default:
+			return domain.ErrInternal
+		}
+	}
+
+	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+		slog.Error("Nenhuma linha foi inserida", "error", err)
+		return domain.ErrDataNotFound
 	}
 
 	return nil

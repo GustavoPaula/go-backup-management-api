@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 
-	crypto "github.com/GustavoPaula/go-backup-management-api/internal/adapter/security"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
@@ -112,12 +111,12 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) (*doma
 	}
 
 	if user.Password != "" {
-		hashedPassword, err := crypto.HashPassword(user.Password)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
 			return nil, domain.ErrInternal
 		}
 
-		user.Password = hashedPassword
+		user.Password = string(hashedPassword)
 	} else {
 		user.Password = existingUser.Password
 	}

@@ -38,7 +38,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 	result, err := tx.Exec(ctx, queryPlan, backupPlan.ID, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, now)
 	if err != nil {
 		slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
-		handleCreateError(err)
+		handleDatabaseError(err)
 		return err
 	}
 
@@ -59,7 +59,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 		result, err := tx.Exec(ctx, queryWeek, day.ID, day.Day, day.TimeDay, day.BackupPlanID, day.CreatedAt, day.UpdatedAt)
 		if err != nil {
 			slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
-			handleCreateError(err)
+			handleDatabaseError(err)
 			return err
 		}
 

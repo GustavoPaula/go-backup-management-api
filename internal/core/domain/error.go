@@ -3,6 +3,8 @@ package domain
 import "errors"
 
 var (
+	ErrBadRequest                  = errors.New("BAD_REQUEST")
+	ErrServiceUnavailable          = errors.New("SERVICE_UNAVAILABLE")
 	ErrInternal                    = errors.New("INTERNAL_ERROR")
 	ErrDataNotFound                = errors.New("DATA_NOT_FOUND")
 	ErrConflictingData             = errors.New("CONFLICTING_DATA")

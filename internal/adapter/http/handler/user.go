@@ -63,6 +63,7 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := domain.User{
+		ID:       uuid.New(),
 		Username: req.Username,
 		Email:    email,
 		Password: req.Password,
@@ -72,11 +73,19 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	err = uh.svc.Register(r.Context(), &user)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusConflict, "Falha ao criar usuário", nil, err.Error())
+			return
+		case domain.ErrDataNotFound:
+			response.JSON(w, http.StatusConflict, "Falha ao criar usuário", nil, err.Error())
+			return
 		case domain.ErrConflictingData:
 			response.JSON(w, http.StatusConflict, "Usuário já cadastrado", nil, err.Error())
 			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusConflict, "Falha ao criar usuário", nil, err.Error())
+			return
 		default:
-			slog.Error("Login error", "error", err, "username", user.Username)
 			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
 			return
 		}
