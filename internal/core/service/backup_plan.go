@@ -28,7 +28,13 @@ func NewBackupPlanService(
 }
 
 func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error) {
-	device, _ := bps.deviceRepo.GetDeviceByID(ctx, backupPlan.DeviceID)
+	device, err := bps.deviceRepo.GetDeviceByID(ctx, backupPlan.DeviceID)
+	if err != nil {
+		if err == domain.ErrDataNotFound {
+			return nil, err
+		}
+		return nil, domain.ErrInternal
+	}
 
 	if device == nil {
 		return nil, domain.ErrDataNotFound

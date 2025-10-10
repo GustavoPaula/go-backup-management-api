@@ -15,6 +15,12 @@ type BackupPlanHandler struct {
 	svc port.BackupPlanService
 }
 
+func NewBackupPlanHandler(svc port.BackupPlanService) *BackupPlanHandler {
+	return &BackupPlanHandler{
+		svc,
+	}
+}
+
 type backupPlanRequest struct {
 	Name            string              `json:"name"`
 	BackupSizeBytes int                 `json:"backup_size_bytes"`
@@ -25,12 +31,6 @@ type backupPlanRequest struct {
 type backupPlanWeekDay struct {
 	Day     string    `json:"day"`
 	TimeDay time.Time `json:"time_day"`
-}
-
-func NewBackupPlanHandler(svc port.BackupPlanService) *BackupPlanHandler {
-	return &BackupPlanHandler{
-		svc,
-	}
 }
 
 func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +58,7 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	newBackupPlan, err := bph.svc.CreateBackupPlan(r.Context(), backupPlan)
+	_, err := bph.svc.CreateBackupPlan(r.Context(), backupPlan)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			response.JSON(w, http.StatusNotFound, "Erro ao criar plano de backup", nil, err.Error())
@@ -69,7 +69,7 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, "Plano de backup criado com sucesso", newBackupPlan, nil)
+	response.JSON(w, http.StatusCreated, "Plano de backup criado com sucesso", nil, nil)
 }
 
 func GetBackupPlan(w http.ResponseWriter, r *http.Request) {
