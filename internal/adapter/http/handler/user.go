@@ -32,15 +32,6 @@ type registerRequest struct {
 	Role     string `json:"role"`
 }
 
-type registerResponse struct {
-	ID        uuid.UUID       `json:"id"`
-	Username  string          `json:"username"`
-	Email     string          `json:"email"`
-	Role      domain.UserRole `json:"role"`
-	CreatedAt time.Time       `json:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at"`
-}
-
 func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -78,7 +69,7 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Role:     domain.UserRole(role),
 	}
 
-	newUser, err := uh.svc.Register(r.Context(), &user)
+	err = uh.svc.Register(r.Context(), &user)
 	if err != nil {
 		switch err {
 		case domain.ErrConflictingData:
@@ -91,16 +82,7 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	res := registerResponse{
-		ID:        newUser.ID,
-		Username:  newUser.Username,
-		Email:     newUser.Email,
-		Role:      newUser.Role,
-		CreatedAt: newUser.CreatedAt,
-		UpdatedAt: newUser.UpdatedAt,
-	}
-
-	response.JSON(w, http.StatusCreated, "Usuário cadastrado com sucesso", res, nil)
+	response.JSON(w, http.StatusCreated, "Usuário cadastrado com sucesso", nil, nil)
 }
 
 type getUserResponse struct {

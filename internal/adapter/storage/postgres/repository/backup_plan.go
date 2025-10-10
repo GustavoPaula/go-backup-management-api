@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -26,17 +25,20 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 
 	tx, err := bpr.db.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("erro ao iniciar transação: %w", err)
+		slog.Error("Erro ao iniciar transação", "error", err)
+		return err
 	}
 	defer tx.Rollback(ctx)
 
 	queryPlan := `
-			INSERT INTO backup_plans (id, name, backup_size_bytes, device_id, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6)
-		`
+		INSERT INTO backup_plans (id, name, backup_size_bytes, device_id, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6)
+	`
+
 	result, err := tx.Exec(ctx, queryPlan, backupPlan.ID, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, now)
 	if err != nil {
 		slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
+		handleCreateError(err)
 		return err
 	}
 
@@ -57,6 +59,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 		result, err := tx.Exec(ctx, queryWeek, day.ID, day.Day, day.TimeDay, day.BackupPlanID, day.CreatedAt, day.UpdatedAt)
 		if err != nil {
 			slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
+			handleCreateError(err)
 			return err
 		}
 
@@ -67,7 +70,8 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("erro ao fazer commit: %w", err)
+		slog.Error("Erro ao fazer commit", "error", err)
+		return err
 	}
 
 	return nil

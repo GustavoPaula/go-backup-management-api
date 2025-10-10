@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 
-	crypto "github.com/GustavoPaula/go-backup-management-api/internal/adapter/security"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type authService struct {
@@ -29,7 +29,7 @@ func (as *authService) Login(ctx context.Context, username, password string) (st
 		return "", domain.ErrInternal
 	}
 
-	err = crypto.CheckPassword(password, user.Password)
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
 		return "", domain.ErrInvalidCredentials
 	}

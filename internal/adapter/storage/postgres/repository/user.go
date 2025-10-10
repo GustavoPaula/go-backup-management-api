@@ -21,7 +21,7 @@ func NewUserRepository(db *postgres.DB) *userRepository {
 	}
 }
 
-func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) error {
 	now := time.Now()
 
 	query := `
@@ -43,13 +43,13 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) (*d
 
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, err
+			return err
 		}
 		slog.Error("Erro ao criar usuário", "error", err)
-		return nil, err
+		return err
 	}
 
-	return user, nil
+	return nil
 }
 
 func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {

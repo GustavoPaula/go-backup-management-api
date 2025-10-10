@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"log/slog"
 
 	crypto "github.com/GustavoPaula/go-backup-management-api/internal/adapter/security"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userService struct {
@@ -20,29 +22,30 @@ func NewUserService(repo port.UserRepository) port.UserService {
 	}
 }
 
-func (us *userService) Register(ctx context.Context, user *domain.User) (*domain.User, error) {
+func (us *userService) Register(ctx context.Context, user *domain.User) error {
 	existingUser, _ := us.repo.GetUserByEmail(ctx, user.Email)
 	if existingUser != nil {
-		return nil, domain.ErrConflictingData
+		return domain.ErrConflictingData
 	}
 
 	existingUser, _ = us.repo.GetUserByUsername(ctx, user.Username)
 	if existingUser != nil {
-		return nil, domain.ErrConflictingData
+		return domain.ErrConflictingData
 	}
 
-	hashedPassword, err := crypto.HashPassword(user.Password)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, domain.ErrInternal
+		slog.Error("Erro ao criptografar senha do usuário", "error", err)
+		return domain.ErrInternal
 	}
 
-	user.Password = hashedPassword
-	user, err = us.repo.CreateUser(ctx, user)
+	user.Password = string(hashedPassword)
+	err = us.repo.CreateUser(ctx, user)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return domain.ErrInternal
 	}
 
-	return user, nil
+	return nil
 }
 
 func (us *userService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User, error) {
