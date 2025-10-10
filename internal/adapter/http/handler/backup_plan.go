@@ -58,7 +58,7 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	_, err := bph.svc.CreateBackupPlan(r.Context(), backupPlan)
+	err := bph.svc.CreateBackupPlan(r.Context(), backupPlan)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
 			response.JSON(w, http.StatusNotFound, "Erro ao criar plano de backup", nil, err.Error())

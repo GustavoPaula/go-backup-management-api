@@ -27,17 +27,17 @@ func NewBackupPlanService(
 	}
 }
 
-func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error) {
+func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) error {
 	device, err := bps.deviceRepo.GetDeviceByID(ctx, backupPlan.DeviceID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
-			return nil, err
+			return err
 		}
-		return nil, domain.ErrInternal
+		return domain.ErrInternal
 	}
 
 	if device == nil {
-		return nil, domain.ErrDataNotFound
+		return domain.ErrDataNotFound
 	}
 
 	backupPlan.Device = device
@@ -45,27 +45,27 @@ func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *
 	customer, err := bps.customerRepo.GetCustomerByID(ctx, device.CustomerID)
 	if err != nil {
 		if err == domain.ErrDataNotFound {
-			return nil, err
+			return err
 		}
-		return nil, domain.ErrInternal
+		return domain.ErrInternal
 	}
 
 	if customer.ID == uuid.Nil {
 		if err == domain.ErrDataNotFound {
-			return nil, err
+			return err
 		}
-		return nil, domain.ErrInternal
+		return domain.ErrInternal
 	}
 
 	backupPlan.Customer = customer
 
-	newBackupPlan, err := bps.backupPlanRepo.CreateBackupPlan(ctx, backupPlan)
+	err = bps.backupPlanRepo.CreateBackupPlan(ctx, backupPlan)
 	if err != nil {
 		slog.Error("Erro ao criar plano de backup", "error", err.Error())
-		return nil, domain.ErrInternal
+		return domain.ErrInternal
 	}
 
-	return newBackupPlan, nil
+	return nil
 }
 
 func (bps *backupPlanService) GetBackupPlan(ctx context.Context, id uuid.UUID) (*domain.BackupPlan, error) {

@@ -8,7 +8,7 @@ import (
 )
 
 type BackupPlanRepository interface {
-	CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error)
+	CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) error
 	GetBackupPlanByID(ctx context.Context, id uuid.UUID) (*domain.BackupPlan, error)
 	ListBackupPlans(ctx context.Context, page, limit int) ([]domain.BackupPlan, error)
 	UpdateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error)
@@ -16,7 +16,7 @@ type BackupPlanRepository interface {
 }
 
 type BackupPlanService interface {
-	CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error)
+	CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) error
 	GetBackupPlan(ctx context.Context, id uuid.UUID) (*domain.BackupPlan, error)
 	ListBackupPlans(ctx context.Context, page, limit int) ([]domain.BackupPlan, error)
 	UpdateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error)
