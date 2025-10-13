@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
 	"github.com/google/uuid"
 )
 
@@ -30,10 +31,7 @@ func NewBackupPlanService(
 func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) error {
 	device, err := bps.deviceRepo.GetDeviceByID(ctx, backupPlan.DeviceID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return err
-		}
-		return domain.ErrInternal
+		return err
 	}
 
 	if device == nil {
@@ -44,37 +42,29 @@ func (bps *backupPlanService) CreateBackupPlan(ctx context.Context, backupPlan *
 
 	customer, err := bps.customerRepo.GetCustomerByID(ctx, device.CustomerID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return err
-		}
-		return domain.ErrInternal
+		return err
 	}
 
 	if customer.ID == uuid.Nil {
-		if err == domain.ErrDataNotFound {
-			return err
-		}
-		return domain.ErrInternal
+		return domain.ErrDataNotFound
 	}
 
 	backupPlan.Customer = customer
 
 	err = bps.backupPlanRepo.CreateBackupPlan(ctx, backupPlan)
 	if err != nil {
-		slog.Error("Erro ao criar plano de backup", "error", err.Error())
-		return domain.ErrInternal
+		return err
 	}
 
 	return nil
 }
 
 func (bps *backupPlanService) GetBackupPlan(ctx context.Context, id uuid.UUID) (*domain.BackupPlan, error) {
+	var backupPlan *domain.BackupPlan
+
 	backupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, id)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 
 	return backupPlan, nil
@@ -85,53 +75,43 @@ func (bps *backupPlanService) ListBackupPlans(ctx context.Context, page, limit i
 
 	backupPlans, err := bps.backupPlanRepo.ListBackupPlans(ctx, page, limit)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 
 	return backupPlans, nil
 }
 
-func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) (*domain.BackupPlan, error) {
+func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) error {
 	existingBackupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, backupPlan.ID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
+		return err
 	}
 
-	if backupPlan.Name == "" {
-		backupPlan.Name = existingBackupPlan.Name
+	backupPlan = &domain.BackupPlan{
+		ID:              backupPlan.ID,
+		Name:            util.Coalesce(backupPlan.Name, existingBackupPlan.Name),
+		BackupSizeBytes: util.Coalesce(backupPlan.BackupSizeBytes, existingBackupPlan.BackupSizeBytes),
+		DeviceID:        util.Coalesce(backupPlan.DeviceID, existingBackupPlan.DeviceID),
 	}
 
-	if backupPlan.BackupSizeBytes == 0 {
-		backupPlan.BackupSizeBytes = existingBackupPlan.BackupSizeBytes
-	}
-
-	if backupPlan.DeviceID == uuid.Nil {
-		backupPlan.DeviceID = existingBackupPlan.DeviceID
-	}
-
-	updateBackupPlan, err := bps.backupPlanRepo.UpdateBackupPlan(ctx, backupPlan)
+	err = bps.backupPlanRepo.UpdateBackupPlan(ctx, backupPlan)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return err
 	}
 
-	return updateBackupPlan, nil
+	return nil
 }
 
 func (bps *backupPlanService) DeleteBackupPlan(ctx context.Context, id uuid.UUID) error {
 	backupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, id)
+	fmt.Println(backupPlan)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return err
-		}
-		return domain.ErrInternal
+		return err
 	}
 
 	err = bps.backupPlanRepo.DeleteBackupPlan(ctx, backupPlan.ID)
 	if err != nil {
-		return domain.ErrInternal
+		return err
 	}
 
 	return nil

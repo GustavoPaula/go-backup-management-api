@@ -41,7 +41,7 @@ func (us *userService) Register(ctx context.Context, user *domain.User) error {
 	user.Password = string(hashedPassword)
 	err = us.repo.CreateUser(ctx, user)
 	if err != nil {
-		return domain.ErrInternal
+		return err
 	}
 
 	return nil
@@ -52,10 +52,7 @@ func (us *userService) GetUser(ctx context.Context, id uuid.UUID) (*domain.User,
 
 	user, err := us.repo.GetUserByID(ctx, id)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 
 	return user, nil
@@ -66,7 +63,7 @@ func (us *userService) ListUsers(ctx context.Context, page, limit int) ([]domain
 
 	users, err := us.repo.ListUsers(ctx, page, limit)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return nil, err
 	}
 
 	return users, nil
@@ -75,16 +72,13 @@ func (us *userService) ListUsers(ctx context.Context, page, limit int) ([]domain
 func (us *userService) UpdateUser(ctx context.Context, user *domain.User) error {
 	existingUser, err := us.repo.GetUserByID(ctx, user.ID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return err
-		}
-		return domain.ErrInternal
+		return err
 	}
 
 	if user.Username != "" && user.Username != existingUser.Username {
 		userWithSameUsername, err := us.repo.GetUserByUsername(ctx, user.Username)
-		if err != nil && err != domain.ErrDataNotFound {
-			return domain.ErrInternal
+		if err != nil {
+			return err
 		}
 
 		if userWithSameUsername != nil && userWithSameUsername.ID != user.ID {
@@ -94,8 +88,8 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) error 
 
 	if user.Email != "" && user.Email != existingUser.Email {
 		userWithSameEmail, err := us.repo.GetUserByEmail(ctx, user.Email)
-		if err != nil && err != domain.ErrDataNotFound {
-			return domain.ErrInternal
+		if err != nil {
+			return err
 		}
 
 		if userWithSameEmail != nil && userWithSameEmail.ID != user.ID {
@@ -123,7 +117,7 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) error 
 
 	err = us.repo.UpdateUser(ctx, user)
 	if err != nil {
-		return domain.ErrInternal
+		return err
 	}
 
 	return nil
@@ -132,15 +126,12 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) error 
 func (us *userService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	existingUser, err := us.repo.GetUserByID(ctx, id)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return err
-		}
-		return domain.ErrInternal
+		return err
 	}
 
 	err = us.repo.DeleteUser(ctx, existingUser.ID)
 	if err != nil {
-		return domain.ErrInternal
+		return err
 	}
 
 	return nil

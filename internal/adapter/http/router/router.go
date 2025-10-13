@@ -71,6 +71,8 @@ func NewRouter(
 		r.Delete("/devices/{id}", deviceHandler.DeleteDevice)
 
 		r.Post("/backup_plan", backupPlanHandler.CreateBackupPlan)
+		r.Get("/backup_plan/{id}", backupPlanHandler.GetBackupPlan)
+		r.Delete("/backup_plan/{id}", backupPlanHandler.DeleteBackupPlan)
 	})
 
 	return &router{

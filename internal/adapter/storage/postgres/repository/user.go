@@ -29,19 +29,8 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	result, err := ur.db.Exec(ctx, query, user.ID, user.Username, user.Email, user.Password, user.Role, now, now)
-	if err := handleDatabaseError(err); err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			return domain.ErrBadRequest
-		case domain.ErrConflictingData:
-			return domain.ErrConflictingData
-		case domain.ErrDataNotFound:
-			return domain.ErrDataNotFound
-		case domain.ErrServiceUnavailable:
-			return domain.ErrServiceUnavailable
-		default:
-			return domain.ErrInternal
-		}
+	if err != nil {
+		return handleDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -76,19 +65,8 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 		return nil, domain.ErrDataNotFound
 	}
 
-	if err := handleDatabaseError(err); err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			return nil, domain.ErrBadRequest
-		case domain.ErrConflictingData:
-			return nil, domain.ErrConflictingData
-		case domain.ErrDataNotFound:
-			return nil, domain.ErrDataNotFound
-		case domain.ErrServiceUnavailable:
-			return nil, domain.ErrServiceUnavailable
-		default:
-			return nil, domain.ErrInternal
-		}
+	if err != nil {
+		return nil, handleDatabaseError(err)
 	}
 
 	return &user, nil
@@ -118,19 +96,8 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 		return nil, domain.ErrDataNotFound
 	}
 
-	if err := handleDatabaseError(err); err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			return nil, domain.ErrBadRequest
-		case domain.ErrConflictingData:
-			return nil, domain.ErrConflictingData
-		case domain.ErrDataNotFound:
-			return nil, domain.ErrDataNotFound
-		case domain.ErrServiceUnavailable:
-			return nil, domain.ErrServiceUnavailable
-		default:
-			return nil, domain.ErrInternal
-		}
+	if err != nil {
+		return nil, handleDatabaseError(err)
 	}
 
 	return &user, nil
@@ -160,19 +127,8 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 		return nil, domain.ErrDataNotFound
 	}
 
-	if err := handleDatabaseError(err); err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			return nil, domain.ErrBadRequest
-		case domain.ErrConflictingData:
-			return nil, domain.ErrConflictingData
-		case domain.ErrDataNotFound:
-			return nil, domain.ErrDataNotFound
-		case domain.ErrServiceUnavailable:
-			return nil, domain.ErrServiceUnavailable
-		default:
-			return nil, domain.ErrInternal
-		}
+	if err != nil {
+		return nil, handleDatabaseError(err)
 	}
 
 	return &user, nil
@@ -226,19 +182,8 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) err
 	`
 
 	result, err := ur.db.Exec(ctx, query, user.Username, user.Email, user.Password, user.Role, time.Now(), user.ID)
-	if err := handleDatabaseError(err); err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			return domain.ErrBadRequest
-		case domain.ErrConflictingData:
-			return domain.ErrConflictingData
-		case domain.ErrDataNotFound:
-			return domain.ErrDataNotFound
-		case domain.ErrServiceUnavailable:
-			return domain.ErrServiceUnavailable
-		default:
-			return domain.ErrInternal
-		}
+	if err != nil {
+		return handleDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -255,19 +200,8 @@ func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 		WHERE id = $1
 	`
 	result, err := ur.db.Exec(ctx, query, id)
-	if err := handleDatabaseError(err); err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			return domain.ErrBadRequest
-		case domain.ErrConflictingData:
-			return domain.ErrConflictingData
-		case domain.ErrDataNotFound:
-			return domain.ErrDataNotFound
-		case domain.ErrServiceUnavailable:
-			return domain.ErrServiceUnavailable
-		default:
-			return domain.ErrInternal
-		}
+	if err != nil {
+		return handleDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {

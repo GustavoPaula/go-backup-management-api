@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	// 400
+	// 400 - Erros de entrada/dados inválidos
 	ErrPgInvalidTextRepresentation = "22P02" // 400 - Formato de texto inválido
 	ErrPgInvalidDatetimeFormat     = "22007" // 400 - Formato de data/hora inválido
 	ErrPgDatetimeFieldOverflow     = "22008" // 400 - Data/hora fora do range
@@ -20,22 +20,22 @@ var (
 	ErrPgForeignKeyViolation       = "23503" // 400 - Referência inválida
 	ErrPgCheckViolation            = "23514" // 400 - Violação de regra de negócio
 
-	// 409
+	// 404 - Entidades ou colunas não encontradas
+	ErrPgUndefinedTable  = "42P01" // 404* ou 500 - Tabela não existe
+	ErrPgUndefinidColumn = "42703" // 404* ou 500 - Coluna não existe
+
+	// 409 - Conflitos ou bloqueios
 	ErrPgRestrictViolation    = "23001" // 409 - Operação restrita por regras
 	ErrPgSerializationFailure = "40001" // 409 - Conflito de serialização
 	ErrPgDeadLockDetected     = "40P01" // 409 - Deadlock detectado
 	ErrPgLockNotAvailable     = "55P03" // 409 - Recurso bloqueado
 	ErrPgObjectInUse          = "55006" // 409 - Objeto em uso
 
-	// 404
-	ErrPgUndefinedTable  = "42P01" // 404* ou 500 - Tabela não existe
-	ErrPgUndefinidColumn = "42703" // 404* ou 500 - Coluna não existe
-
-	// 500
+	// 500 - Erros internos da aplicação
 	ErrPgInFailedSqlTransaction = "25P02" // 500 - Transação em estado inconsistente
 	ErrPgSyntaxError            = "42601" // 500 - Erro de sintaxe SQL (bug na aplicação)
 
-	// 503
+	// 503 - Sobrecarga ou falhas temporárias
 	ErrPgTooManyConnections = "53300" // 503 - Muitas conexões
 	ErrPgQueryCanceled      = "57014" // 503 - Query cancelada (timeout/overload)
 )
@@ -44,7 +44,6 @@ func handleDatabaseError(err error) error {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
 		switch pgErr.Code {
-		// 400 - Erros de entrada/dados inválidos
 		case ErrPgInvalidTextRepresentation:
 			slog.Error("Formato de texto inválido", "datatype", pgErr.DataTypeName, "msg", pgErr.Message)
 			return domain.ErrBadRequest
@@ -72,16 +71,12 @@ func handleDatabaseError(err error) error {
 		case ErrPgUniqueConstraint:
 			slog.Error("Violação de unicidade (chave duplicada)", "constraint", pgErr.ConstraintName)
 			return domain.ErrConflictingData
-
-		// 404 - Entidades ou colunas não encontradas
 		case ErrPgUndefinedTable:
 			slog.Error("Tabela não encontrada", "table", pgErr.TableName)
 			return domain.ErrDataNotFound
 		case ErrPgUndefinidColumn:
 			slog.Error("Coluna não encontrada", "column", pgErr.ColumnName)
 			return domain.ErrDataNotFound
-
-		// 409 - Conflitos ou bloqueios
 		case ErrPgRestrictViolation:
 			slog.Error("Violação de restrição (RESTRICT)", "constraint", pgErr.ConstraintName)
 			return domain.ErrConflictingData
@@ -97,16 +92,12 @@ func handleDatabaseError(err error) error {
 		case ErrPgObjectInUse:
 			slog.Error("Objeto em uso", "msg", pgErr.Message)
 			return domain.ErrConflictingData
-
-		// 500 - Erros internos da aplicação
 		case ErrPgInFailedSqlTransaction:
 			slog.Error("Transação em estado inconsistente", "msg", pgErr.Message)
 			return domain.ErrInternal
 		case ErrPgSyntaxError:
 			slog.Error("Erro de sintaxe SQL (provável bug da aplicação)", "msg", pgErr.Message)
 			return domain.ErrInternal
-
-		// 503 - Sobrecarga ou falhas temporárias
 		case ErrPgTooManyConnections:
 			slog.Error("Muitas conexões com o banco de dados", "msg", pgErr.Message)
 			return domain.ErrServiceUnavailable
