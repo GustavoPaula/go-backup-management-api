@@ -60,27 +60,20 @@ func (cs *customerService) ListCustomers(ctx context.Context, page, limit int) (
 	return customers, nil
 }
 
-func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
+func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.Customer) error {
 	existingCustomer, err := cs.repo.GetCustomerByID(ctx, customer.ID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
-	}
-
-	if existingCustomer == nil {
-		return nil, domain.ErrInternal
+		return err
 	}
 
 	if customer.Name != "" && customer.Name != existingCustomer.Name {
 		customerWithSameName, err := cs.repo.GetCustomerByName(ctx, customer.Name)
-		if err != nil && err != domain.ErrDataNotFound {
-			return nil, domain.ErrInternal
+		if err != nil {
+			return err
 		}
 
 		if customerWithSameName != nil && customerWithSameName.ID != customer.ID {
-			return nil, domain.ErrConflictingData
+			return domain.ErrConflictingData
 		}
 	}
 
@@ -89,12 +82,12 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 		Name: util.Coalesce(customer.Name, existingCustomer.Name),
 	}
 
-	updateCustomer, err := cs.repo.UpdateCustomer(ctx, customer)
+	err = cs.repo.UpdateCustomer(ctx, customer)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return err
 	}
 
-	return updateCustomer, nil
+	return nil
 }
 
 func (cs *customerService) DeleteCustomer(ctx context.Context, id uuid.UUID) error {

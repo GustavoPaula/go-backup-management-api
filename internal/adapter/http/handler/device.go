@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -29,14 +28,6 @@ type createDeviceRequest struct {
 	CustomerID string `json:"customer_id"`
 }
 
-type createDeviceResponse struct {
-	ID         uuid.UUID `json:"id"`
-	Name       string    `json:"name"`
-	CustomerID uuid.UUID `json:"customer_id"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-}
-
 func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 	var req createDeviceRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -56,29 +47,28 @@ func (dh *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 		CustomerID: customerId,
 	}
 
-	fmt.Println(device.Customer)
-
-	newDevice, err := dh.svc.CreateDevice(r.Context(), &device)
+	err = dh.svc.CreateDevice(r.Context(), &device)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "Erro ao vincular dispositivo com cliente inexistente", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
 
-	res := createDeviceResponse{
-		ID:         newDevice.ID,
-		Name:       newDevice.Name,
-		CustomerID: newDevice.CustomerID,
-		CreatedAt:  newDevice.CreatedAt,
-		UpdatedAt:  newDevice.UpdatedAt,
-	}
-
-	response.JSON(w, http.StatusCreated, "Dispositivo vinculado com sucesso", res, nil)
+	response.JSON(w, http.StatusCreated, "Dispositivo vinculado com sucesso", nil, nil)
 }
 
 type getDeviceResponse struct {
@@ -105,11 +95,20 @@ func (dh *DeviceHandler) GetDevice(w http.ResponseWriter, r *http.Request) {
 	device, err := dh.svc.GetDevice(r.Context(), id)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "Erro ao obter dispositivo", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
@@ -157,8 +156,20 @@ func (dh *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 	devices, err := dh.svc.ListDevices(r.Context(), page, limit)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
+		case domain.ErrDataNotFound:
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
+			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, nil)
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
@@ -182,21 +193,8 @@ type updateDeviceRequest struct {
 	CustomerID uuid.UUID `json:"customer_id"`
 }
 
-type updateDeviceResponse struct {
-	ID         uuid.UUID `json:"id,omitempty"`
-	Name       string    `json:"name,omitempty"`
-	CustomerID uuid.UUID `json:"customer_id,omitempty"`
-	CreatedAt  time.Time `json:"created_at,omitzero"`
-	UpdatedAt  time.Time `json:"updated_at,omitzero"`
-}
-
 func (dh *DeviceHandler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 	deviceId := chi.URLParam(r, "id")
-	if deviceId == "" {
-		response.JSON(w, http.StatusBadRequest, "ID do dispositivo é obrigatório", nil, nil)
-		return
-	}
-
 	id, err := uuid.Parse(deviceId)
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
@@ -216,28 +214,28 @@ func (dh *DeviceHandler) UpdateDevice(w http.ResponseWriter, r *http.Request) {
 		CustomerID: req.CustomerID,
 	}
 
-	updateDevice, err := dh.svc.UpdateDevice(r.Context(), &device)
-
+	err = dh.svc.UpdateDevice(r.Context(), &device)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "Dispositivo não encontrado", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}
 
-	res := updateDeviceResponse{
-		ID:         updateDevice.ID,
-		Name:       updateDevice.Name,
-		CustomerID: updateDevice.CustomerID,
-		CreatedAt:  updateDevice.CreatedAt,
-		UpdatedAt:  updateDevice.UpdatedAt,
-	}
-
-	response.JSON(w, http.StatusOK, "Dispositivo atualizado", res, nil)
+	response.JSON(w, http.StatusOK, "Dispositivo atualizado", nil, nil)
 }
 
 func (dh *DeviceHandler) DeleteDevice(w http.ResponseWriter, r *http.Request) {
@@ -256,11 +254,20 @@ func (dh *DeviceHandler) DeleteDevice(w http.ResponseWriter, r *http.Request) {
 	err = dh.svc.DeleteDevice(r.Context(), id)
 	if err != nil {
 		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
 		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusBadRequest, "Dispositivo não encontrado", nil, err.Error())
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
 			return
 		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro inesperado", nil, err.Error())
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
 			return
 		}
 	}

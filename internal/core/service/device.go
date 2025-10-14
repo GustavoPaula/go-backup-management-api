@@ -20,23 +20,19 @@ func NewDeviceService(deviceRepo port.DeviceRepository, customerRepo port.Custom
 	}
 }
 
-func (ds *deviceService) CreateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
+func (ds *deviceService) CreateDevice(ctx context.Context, device *domain.Device) error {
 	customer, err := ds.customerRepo.GetCustomerByID(ctx, device.CustomerID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-
-		return nil, domain.ErrInternal
+		return err
 	}
 
 	device.Customer = customer
-	device, err = ds.deviceRepo.CreateDevice(ctx, device)
+	err = ds.deviceRepo.CreateDevice(ctx, device)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return err
 	}
 
-	return device, nil
+	return nil
 }
 
 func (ds *deviceService) GetDevice(ctx context.Context, id uuid.UUID) (*domain.Device, error) {
@@ -62,13 +58,10 @@ func (ds *deviceService) ListDevices(ctx context.Context, page, limit int) ([]do
 	return devices, nil
 }
 
-func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
+func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device) error {
 	existingDevice, err := ds.deviceRepo.GetDeviceByID(ctx, device.ID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
+		return err
 	}
 
 	if device.Name == "" {
@@ -77,20 +70,16 @@ func (ds *deviceService) UpdateDevice(ctx context.Context, device *domain.Device
 
 	customer, err := ds.customerRepo.GetCustomerByID(ctx, device.CustomerID)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return nil, err
-		}
-		return nil, domain.ErrInternal
+		return err
 	}
 
 	device.Customer = customer
-
-	updateDevice, err := ds.deviceRepo.UpdateDevice(ctx, device)
+	err = ds.deviceRepo.UpdateDevice(ctx, device)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return err
 	}
 
-	return updateDevice, nil
+	return nil
 }
 
 func (ds *deviceService) DeleteDevice(ctx context.Context, id uuid.UUID) error {

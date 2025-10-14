@@ -21,32 +21,27 @@ func NewDeviceRepository(db *postgres.DB) *deviceRepository {
 	}
 }
 
-func (dr *deviceRepository) CreateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
+func (dr *deviceRepository) CreateDevice(ctx context.Context, device *domain.Device) error {
+	now := time.Now()
+
 	query := `
 		INSERT INTO devices (name, customer_id, created_at, updated_at)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, name, customer_id, created_at, updated_at
 	`
 
-	err := dr.db.QueryRow(ctx, query, device.Name, device.CustomerID, time.Now(), time.Now()).
-		Scan(
-			&device.ID,
-			&device.Name,
-			&device.CustomerID,
-			&device.CreatedAt,
-			&device.UpdatedAt,
-		)
-
+	result, err := dr.db.Exec(ctx, query, device.Name, device.CustomerID, now, now)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			slog.Error("erro ao gravar dados na tabela dispositivo", "error", err)
-			return nil, err
-		}
 		slog.Error("Erro ao criar dispositivo", "error", err.Error())
-		return nil, err
+		return handleDatabaseError(err)
 	}
 
-	return device, nil
+	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+		slog.Error("Nenhuma linha afetada", "error", err)
+		return domain.ErrDataNotFound
+	}
+
+	return nil
 }
 
 func (dr *deviceRepository) GetDeviceByID(ctx context.Context, id uuid.UUID) (*domain.Device, error) {
@@ -66,11 +61,12 @@ func (dr *deviceRepository) GetDeviceByID(ctx context.Context, id uuid.UUID) (*d
 		&device.UpdatedAt,
 	)
 
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrDataNotFound
+	}
+
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, domain.ErrDataNotFound
-		}
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 
 	return &device, nil
@@ -93,12 +89,13 @@ func (dr *deviceRepository) GetDeviceByCustomerID(ctx context.Context, id uuid.U
 		&device.UpdatedAt,
 	)
 
+	if err == pgx.ErrNoRows {
+		return nil, domain.ErrDataNotFound
+	}
+
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, domain.ErrDataNotFound
-		}
 		slog.Error("Erro ao buscar dispositivo pelo customer_id", "error", err.Error())
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 
 	return &device, nil
@@ -119,7 +116,7 @@ func (dr *deviceRepository) ListDevices(ctx context.Context, page, limit int) ([
 	rows, err := dr.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		slog.Error("Erro ao buscar devices", "error", err)
-		return nil, err
+		return nil, handleDatabaseError(err)
 	}
 	defer rows.Close()
 
@@ -133,7 +130,7 @@ func (dr *deviceRepository) ListDevices(ctx context.Context, page, limit int) ([
 		)
 		if err != nil {
 			slog.Error("Erro ao fazer rows scan no List Users", "error", err.Error())
-			return nil, err
+			return nil, handleDatabaseError(err)
 		}
 
 		devices = append(devices, device)
@@ -142,7 +139,7 @@ func (dr *deviceRepository) ListDevices(ctx context.Context, page, limit int) ([
 	return devices, nil
 }
 
-func (dr *deviceRepository) UpdateDevice(ctx context.Context, device *domain.Device) (*domain.Device, error) {
+func (dr *deviceRepository) UpdateDevice(ctx context.Context, device *domain.Device) error {
 	query := `
 		UPDATE devices
 		SET name = $1, customer_id = $2, updated_at = $3
@@ -150,23 +147,18 @@ func (dr *deviceRepository) UpdateDevice(ctx context.Context, device *domain.Dev
 		RETURNING id, name, customer_id, created_at, updated_at
 	`
 
-	err := dr.db.QueryRow(ctx, query, device.Name, device.CustomerID, time.Now(), device.ID).Scan(
-		&device.ID,
-		&device.Name,
-		&device.CustomerID,
-		&device.CreatedAt,
-		&device.UpdatedAt,
-	)
-
+	result, err := dr.db.Exec(ctx, query, device.Name, device.CustomerID, time.Now(), device.ID)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			return nil, domain.ErrDataNotFound
-		}
 		slog.Error("Erro ao atualizar os dados do devices", "error", err.Error())
-		return nil, err
+		return handleDatabaseError(err)
 	}
 
-	return device, nil
+	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+		slog.Error("Nenhuma linha inserida", "error", err)
+		return handleDatabaseError(err)
+	}
+
+	return nil
 }
 
 func (dr *deviceRepository) DeleteDevice(ctx context.Context, id uuid.UUID) error {
