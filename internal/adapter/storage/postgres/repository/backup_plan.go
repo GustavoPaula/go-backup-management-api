@@ -151,7 +151,6 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 		return nil, domain.ErrDataNotFound
 	}
 
-	// Atribui todos os weekdays coletados
 	backupPlan.WeekDay = weekDays
 	return backupPlan, nil
 }
@@ -159,7 +158,6 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limit int) ([]domain.BackupPlan, error) {
 	backupPlansMap := make(map[uuid.UUID]*domain.BackupPlan) // Map com UUID como chave
 	offset := (page - 1) * limit
-
 	query := `
         SELECT bp.id, 
                bp.name, 
