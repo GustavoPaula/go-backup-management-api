@@ -21,18 +21,18 @@ func NewCustomerService(repo port.CustomerRepository, deviceRepo port.DeviceRepo
 	}
 }
 
-func (cs *customerService) CreateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
+func (cs *customerService) CreateCustomer(ctx context.Context, customer *domain.Customer) error {
 	existingCustomer, _ := cs.repo.GetCustomerByName(ctx, customer.Name)
 	if existingCustomer != nil {
-		return nil, domain.ErrConflictingData
+		return domain.ErrConflictingData
 	}
 
-	customer, err := cs.repo.CreateCustomer(ctx, customer)
+	err := cs.repo.CreateCustomer(ctx, customer)
 	if err != nil {
-		return nil, domain.ErrInternal
+		return err
 	}
 
-	return customer, nil
+	return nil
 }
 
 func (cs *customerService) GetCustomer(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {

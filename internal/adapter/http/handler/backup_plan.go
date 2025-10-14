@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"math/big"
 	"net/http"
 	"time"
 
@@ -24,7 +25,7 @@ func NewBackupPlanHandler(svc port.BackupPlanService) *BackupPlanHandler {
 
 type createBackupPlanRequest struct {
 	Name            string                           `json:"name"`
-	BackupSizeBytes int                              `json:"backup_size_bytes"`
+	BackupSizeBytes *big.Int                         `json:"backup_size_bytes"`
 	DeviceID        uuid.UUID                        `json:"device_id"`
 	WeekDay         []createbackupPlanWeekDayRequest `json:"week_day"`
 }
@@ -86,7 +87,7 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 type getBackupPlanResponse struct {
 	ID              uuid.UUID                      `json:"id"`
 	Name            string                         `json:"name"`
-	BackupSizeBytes int                            `json:"backup_size_bytes"`
+	BackupSizeBytes *big.Int                       `json:"backup_size_bytes"`
 	DeviceID        uuid.UUID                      `json:"device_id"`
 	CreatedAt       time.Time                      `json:"created_at"`
 	UpdatedAt       time.Time                      `json:"updated_at"`

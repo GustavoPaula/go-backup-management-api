@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"log/slog"
+	"math/big"
 	"time"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/storage/postgres"
@@ -106,11 +107,12 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 	for rows.Next() {
 		var bp domain.BackupPlan
 		var wd domain.BackupPlanWeekDay
+		var backupSizeBytes int64
 
 		err := rows.Scan(
 			&bp.ID,
 			&bp.Name,
-			&bp.BackupSizeBytes,
+			&backupSizeBytes,
 			&bp.DeviceID,
 			&bp.CreatedAt,
 			&bp.UpdatedAt,
@@ -124,6 +126,8 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 		if err != nil {
 			return nil, handleDatabaseError(err)
 		}
+
+		bp.BackupSizeBytes = big.NewInt(backupSizeBytes)
 
 		if backupPlan == nil {
 			backupPlan = &bp

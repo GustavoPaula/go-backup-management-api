@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
@@ -104,7 +103,6 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 
 func (bps *backupPlanService) DeleteBackupPlan(ctx context.Context, id uuid.UUID) error {
 	backupPlan, err := bps.backupPlanRepo.GetBackupPlanByID(ctx, id)
-	fmt.Println(backupPlan)
 	if err != nil {
 		return err
 	}

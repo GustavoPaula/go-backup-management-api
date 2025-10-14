@@ -21,31 +21,26 @@ func NewCustomerRepository(db *postgres.DB) *customerRepository {
 	}
 }
 
-func (cr *customerRepository) CreateCustomer(ctx context.Context, customer *domain.Customer) (*domain.Customer, error) {
+func (cr *customerRepository) CreateCustomer(ctx context.Context, customer *domain.Customer) error {
+	now := time.Now()
+
 	query := `
 		INSERT INTO customers (name, created_at, updated_at)
 		VALUES ($1, $2, $3)
 		RETURNING id, name, created_at, updated_at
 	`
 
-	err := cr.db.QueryRow(ctx, query, customer.Name, time.Now(), time.Now()).
-		Scan(
-			&customer.ID,
-			&customer.Name,
-			&customer.CreatedAt,
-			&customer.UpdatedAt,
-		)
-
+	result, err := cr.db.Exec(ctx, query, customer.Name, now, now)
 	if err != nil {
-		if err == pgx.ErrNoRows {
-			slog.Error("erro ao gravar dados na tabela customers", "error", err)
-			return nil, err
-		}
-		slog.Error("Erro ao criar customer", "error", err.Error())
-		return nil, err
+		return handleDatabaseError(err)
 	}
 
-	return customer, nil
+	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+		slog.Error("Nenhuma linha foi inserida", "error", err)
+		return domain.ErrDataNotFound
+	}
+
+	return nil
 }
 
 func (cr *customerRepository) GetCustomerByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {

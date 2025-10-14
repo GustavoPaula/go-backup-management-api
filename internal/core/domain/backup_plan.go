@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,7 +10,7 @@ import (
 type BackupPlan struct {
 	ID              uuid.UUID
 	Name            string
-	BackupSizeBytes int
+	BackupSizeBytes *big.Int
 	DeviceID        uuid.UUID
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
