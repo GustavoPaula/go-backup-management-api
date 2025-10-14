@@ -70,9 +70,10 @@ func NewRouter(
 		r.Put("/devices/{id}", deviceHandler.UpdateDevice)
 		r.Delete("/devices/{id}", deviceHandler.DeleteDevice)
 
-		r.Post("/backup_plan", backupPlanHandler.CreateBackupPlan)
-		r.Get("/backup_plan/{id}", backupPlanHandler.GetBackupPlan)
-		r.Delete("/backup_plan/{id}", backupPlanHandler.DeleteBackupPlan)
+		r.Post("/backup_plans", backupPlanHandler.CreateBackupPlan)
+		r.Get("/backup_plans/{id}", backupPlanHandler.GetBackupPlan)
+		r.Get("/backup_plans", backupPlanHandler.ListBackupPlans)
+		r.Delete("/backup_plans/{id}", backupPlanHandler.DeleteBackupPlan)
 	})
 
 	return &router{
