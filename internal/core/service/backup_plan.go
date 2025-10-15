@@ -93,6 +93,14 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 		DeviceID:        util.Coalesce(backupPlan.DeviceID, existingBackupPlan.DeviceID),
 	}
 
+	backupPlan.WeekDay = make([]domain.BackupPlanWeekDay, len(backupPlan.WeekDay))
+	for i, wd := range backupPlan.WeekDay {
+		backupPlan.WeekDay[i] = domain.BackupPlanWeekDay{
+			Day:     util.Coalesce(wd.Day, existingBackupPlan.WeekDay[i].Day),
+			TimeDay: util.Coalesce(wd.TimeDay, existingBackupPlan.WeekDay[i].TimeDay),
+		}
+	}
+
 	err = bps.backupPlanRepo.UpdateBackupPlan(ctx, backupPlan)
 	if err != nil {
 		return err

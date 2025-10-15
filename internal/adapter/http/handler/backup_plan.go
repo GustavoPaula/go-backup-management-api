@@ -248,8 +248,71 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 	response.JSON(w, http.StatusOK, "Lista de planos de backup", list, nil)
 }
 
-func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Request) {
+type updateBackupPlanRequest struct {
+	Name            string                           `json:"name"`
+	BackupSizeBytes *big.Int                         `json:"backup_size_bytes"`
+	DeviceID        uuid.UUID                        `json:"device_id"`
+	WeekDay         []updatebackupPlanWeekDayRequest `json:"week_day"`
+}
 
+type updatebackupPlanWeekDayRequest struct {
+	Day     string    `json:"day"`
+	TimeDay time.Time `json:"time_day"`
+}
+
+func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Request) {
+	backupPlanId := chi.URLParam(r, "id")
+	id, err := uuid.Parse(backupPlanId)
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
+		return
+	}
+
+	var req updateBackupPlanRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
+		return
+	}
+	defer r.Body.Close()
+
+	backupPlan := &domain.BackupPlan{
+		ID:              id,
+		Name:            req.Name,
+		BackupSizeBytes: req.BackupSizeBytes,
+		DeviceID:        req.DeviceID,
+	}
+
+	backupPlan.WeekDay = make([]domain.BackupPlanWeekDay, len(req.WeekDay))
+	for i, wdReq := range req.WeekDay {
+		backupPlan.WeekDay[i] = domain.BackupPlanWeekDay{
+			Day:          wdReq.Day,
+			TimeDay:      wdReq.TimeDay,
+			BackupPlanID: backupPlan.ID,
+		}
+	}
+
+	err = bph.svc.UpdateBackupPlan(r.Context(), backupPlan)
+	if err != nil {
+		switch err {
+		case domain.ErrBadRequest:
+			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
+			return
+		case domain.ErrDataNotFound:
+			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
+			return
+		case domain.ErrConflictingData:
+			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
+			return
+		case domain.ErrServiceUnavailable:
+			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
+			return
+		default:
+			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
+			return
+		}
+	}
+
+	response.JSON(w, http.StatusNoContent, "Plano de backup atualizado", nil, nil)
 }
 
 func (bph *BackupPlanHandler) DeleteBackupPlan(w http.ResponseWriter, r *http.Request) {
