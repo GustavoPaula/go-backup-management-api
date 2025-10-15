@@ -28,7 +28,7 @@ type createBackupPlanRequest struct {
 	Name            string                           `json:"name"`
 	BackupSizeBytes *big.Int                         `json:"backup_size_bytes"`
 	DeviceID        uuid.UUID                        `json:"device_id"`
-	WeekDay         []createbackupPlanWeekDayRequest `json:"week_day"`
+	WeekDays        []createbackupPlanWeekDayRequest `json:"week_day"`
 }
 
 type createbackupPlanWeekDayRequest struct {
@@ -51,9 +51,9 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 		DeviceID:        req.DeviceID,
 	}
 
-	backupPlan.WeekDay = make([]domain.BackupPlanWeekDay, len(req.WeekDay))
-	for i, wdReq := range req.WeekDay {
-		backupPlan.WeekDay[i] = domain.BackupPlanWeekDay{
+	backupPlan.WeekDays = make([]domain.BackupPlanWeekDay, len(req.WeekDays))
+	for i, wdReq := range req.WeekDays {
+		backupPlan.WeekDays[i] = domain.BackupPlanWeekDay{
 			ID:           uuid.New(),
 			Day:          wdReq.Day,
 			TimeDay:      wdReq.TimeDay,
@@ -92,7 +92,7 @@ type getBackupPlanResponse struct {
 	DeviceID        uuid.UUID                      `json:"device_id"`
 	CreatedAt       time.Time                      `json:"created_at"`
 	UpdatedAt       time.Time                      `json:"updated_at"`
-	WeekDay         []getBackupPlanWeekDayResponse `json:"week_day"`
+	WeekDays        []getBackupPlanWeekDayResponse `json:"week_day"`
 }
 
 type getBackupPlanWeekDayResponse struct {
@@ -133,9 +133,9 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	weekDay := make([]getBackupPlanWeekDayResponse, len(backupPlan.WeekDay))
-	for i, wd := range backupPlan.WeekDay {
-		weekDay[i] = getBackupPlanWeekDayResponse{
+	weekDays := make([]getBackupPlanWeekDayResponse, len(backupPlan.WeekDays))
+	for i, wd := range backupPlan.WeekDays {
+		weekDays[i] = getBackupPlanWeekDayResponse{
 			ID:           wd.ID,
 			Day:          wd.Day,
 			TimeDay:      wd.TimeDay,
@@ -152,7 +152,7 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 		DeviceID:        backupPlan.DeviceID,
 		CreatedAt:       backupPlan.CreatedAt,
 		UpdatedAt:       backupPlan.UpdatedAt,
-		WeekDay:         weekDay,
+		WeekDays:        weekDays,
 	}
 
 	response.JSON(w, http.StatusOK, "Plano de backup encontrado", res, nil)
@@ -222,8 +222,8 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 	list := make([]listBackupPlanRequest, 0, len(backupPlans))
 	for _, backupPlan := range backupPlans {
 		// Converte os weekdays do domain para o formato de response
-		weekDays := make([]listbackupPlanWeekDayRequest, 0, len(backupPlan.WeekDay))
-		for _, wd := range backupPlan.WeekDay {
+		weekDays := make([]listbackupPlanWeekDayRequest, 0, len(backupPlan.WeekDays))
+		for _, wd := range backupPlan.WeekDays {
 			weekDays = append(weekDays, listbackupPlanWeekDayRequest{
 				ID:           wd.ID,
 				Day:          wd.Day,
@@ -282,9 +282,9 @@ func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Re
 		DeviceID:        req.DeviceID,
 	}
 
-	backupPlan.WeekDay = make([]domain.BackupPlanWeekDay, len(req.WeekDay))
+	backupPlan.WeekDays = make([]domain.BackupPlanWeekDay, len(req.WeekDay))
 	for i, wdReq := range req.WeekDay {
-		backupPlan.WeekDay[i] = domain.BackupPlanWeekDay{
+		backupPlan.WeekDays[i] = domain.BackupPlanWeekDay{
 			Day:          wdReq.Day,
 			TimeDay:      wdReq.TimeDay,
 			BackupPlanID: backupPlan.ID,

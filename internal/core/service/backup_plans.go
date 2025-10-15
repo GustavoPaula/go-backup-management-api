@@ -93,11 +93,11 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 		DeviceID:        util.Coalesce(backupPlan.DeviceID, existingBackupPlan.DeviceID),
 	}
 
-	backupPlan.WeekDay = make([]domain.BackupPlanWeekDay, len(backupPlan.WeekDay))
-	for i, wd := range backupPlan.WeekDay {
-		backupPlan.WeekDay[i] = domain.BackupPlanWeekDay{
-			Day:     util.Coalesce(wd.Day, existingBackupPlan.WeekDay[i].Day),
-			TimeDay: util.Coalesce(wd.TimeDay, existingBackupPlan.WeekDay[i].TimeDay),
+	backupPlan.WeekDays = make([]domain.BackupPlanWeekDay, len(backupPlan.WeekDays))
+	for i, wd := range backupPlan.WeekDays {
+		backupPlan.WeekDays[i] = domain.BackupPlanWeekDay{
+			Day:     util.Coalesce(wd.Day, existingBackupPlan.WeekDays[i].Day),
+			TimeDay: util.Coalesce(wd.TimeDay, existingBackupPlan.WeekDays[i].TimeDay),
 		}
 	}
 

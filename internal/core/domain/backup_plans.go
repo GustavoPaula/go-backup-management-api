@@ -16,7 +16,7 @@ type BackupPlan struct {
 	UpdatedAt       time.Time
 	Customer        *Customer
 	Device          *Device
-	WeekDay         []BackupPlanWeekDay
+	WeekDays        []BackupPlanWeekDay
 }
 
 type BackupPlanWeekDay struct {

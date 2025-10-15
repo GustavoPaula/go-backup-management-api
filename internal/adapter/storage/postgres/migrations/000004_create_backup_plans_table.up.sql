@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "week_day_enum" AS ENUM ('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
+CREATE TYPE "week_days_enum" AS ENUM ('Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday');
 
 -- CreateTable
 CREATE TABLE "backup_plans" (
@@ -12,7 +12,7 @@ CREATE TABLE "backup_plans" (
 );
 
 -- CreateTable
-CREATE TABLE "backup_plans_week_day" (
+CREATE TABLE "backup_plans_week_days" (
     "id" uuid PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
     "day" "week_day_enum" NOT NULL,
     "time_day" TIME NOT NULL,
@@ -27,6 +27,6 @@ FOREIGN KEY ("device_id") REFERENCES "devices"("id")
 ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "backup_plans_week_day" ADD CONSTRAINT "backup_plan_week_day_backup_plan_id_fkey"
+ALTER TABLE "backup_plans_week_days" ADD CONSTRAINT "backup_plan_week_days_backup_plan_id_fkey"
 FOREIGN KEY ("backup_plan_id") REFERENCES "backup_plans"("id") 
 ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -48,7 +48,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 	}
 
 	queryWeek := `
-			INSERT INTO backup_plans_week_day (id, day, time_day, backup_plan_id, created_at, updated_at)
+			INSERT INTO backup_plans_week_days (id, day, time_day, backup_plan_id, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6)
 		`
 	for _, day := range backupPlan.WeekDay {
@@ -124,10 +124,8 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 		if err != nil {
 			return nil, handleDatabaseError(err)
 		}
-
 		bp.BackupSizeBytes = big.NewInt(backupSizeBytes)
 
-		// Só inicializa o backupPlan uma vez
 		if backupPlan == nil {
 			backupPlan = &domain.BackupPlan{
 				ID:              bp.ID,
@@ -151,7 +149,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 		return nil, domain.ErrDataNotFound
 	}
 
-	backupPlan.WeekDay = weekDays
+	backupPlan.WeekDays = weekDays
 	return backupPlan, nil
 }
 
