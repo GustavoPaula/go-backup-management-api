@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/dto"
 )
 
 var (
@@ -75,4 +77,20 @@ func UserRoleValidate(role string) (string, error) {
 	}
 
 	return normalized, nil
+}
+
+func StringValidate(str string) error {
+	if str == "" {
+		return ErrValidationRequiredField
+	}
+
+	return nil
+}
+
+func WeekDaysValidate(days []dto.CreatebackupPlanWeekDayRequest) error {
+	if len(days) == 0 {
+		return ErrValidationRequiredField
+	}
+
+	return nil
 }

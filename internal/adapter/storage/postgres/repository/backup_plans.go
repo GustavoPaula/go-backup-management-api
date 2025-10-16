@@ -47,11 +47,6 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 		return err
 	}
 
-	if len(backupPlan.WeekDays) == 0 {
-		slog.Error("Plano de backup sem dias configurados")
-		return domain.ErrBadRequest
-	}
-
 	queryWeek := `
 			INSERT INTO backup_plans_week_days (id, day, time_day, backup_plan_id, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6)

@@ -2,12 +2,12 @@ package handler
 
 import (
 	"encoding/json"
-	"math/big"
 	"net/http"
 	"strconv"
-	"time"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/dto"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/validator"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
@@ -24,25 +24,18 @@ func NewBackupPlanHandler(svc port.BackupPlanService) *BackupPlanHandler {
 	}
 }
 
-type createBackupPlanRequest struct {
-	Name            string                           `json:"name"`
-	BackupSizeBytes *big.Int                         `json:"backup_size_bytes"`
-	DeviceID        uuid.UUID                        `json:"device_id"`
-	WeekDays        []createbackupPlanWeekDayRequest `json:"week_days"`
-}
-
-type createbackupPlanWeekDayRequest struct {
-	Day     string    `json:"day"`
-	TimeDay time.Time `json:"time_day"`
-}
-
 func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Request) {
-	var req createBackupPlanRequest
+	var req dto.CreateBackupPlanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
 	defer r.Body.Close()
+
+	if err := validator.WeekDaysValidate(req.WeekDays); err != nil {
+		response.JSON(w, http.StatusBadRequest, "Dados inválidos nos dias da semana do plano de backup", nil, err.Error())
+		return
+	}
 
 	backupPlan := &domain.BackupPlan{
 		ID:              uuid.New(),
@@ -85,28 +78,8 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 	response.JSON(w, http.StatusCreated, "Plano de backup criado com sucesso", nil, nil)
 }
 
-type getBackupPlanResponse struct {
-	ID              uuid.UUID                      `json:"id"`
-	Name            string                         `json:"name"`
-	BackupSizeBytes *big.Int                       `json:"backup_size_bytes"`
-	DeviceID        uuid.UUID                      `json:"device_id"`
-	CreatedAt       time.Time                      `json:"created_at"`
-	UpdatedAt       time.Time                      `json:"updated_at"`
-	WeekDays        []getBackupPlanWeekDayResponse `json:"week_days"`
-}
-
-type getBackupPlanWeekDayResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Day          string    `json:"day"`
-	TimeDay      time.Time `json:"time_day"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	BackupPlanID uuid.UUID `json:"backup_plan_id"`
-}
-
 func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Request) {
-	backupPlanId := chi.URLParam(r, "id")
-	id, err := uuid.Parse(backupPlanId)
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
@@ -133,9 +106,9 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	weekDays := make([]getBackupPlanWeekDayResponse, len(backupPlan.WeekDays))
+	weekDays := make([]dto.GetBackupPlanWeekDayResponse, len(backupPlan.WeekDays))
 	for i, wd := range backupPlan.WeekDays {
-		weekDays[i] = getBackupPlanWeekDayResponse{
+		weekDays[i] = dto.GetBackupPlanWeekDayResponse{
 			ID:           wd.ID,
 			Day:          wd.Day,
 			TimeDay:      wd.TimeDay,
@@ -145,7 +118,7 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	res := getBackupPlanResponse{
+	res := dto.GetBackupPlanResponse{
 		ID:              backupPlan.ID,
 		Name:            backupPlan.Name,
 		BackupSizeBytes: backupPlan.BackupSizeBytes,
@@ -156,25 +129,6 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 	}
 
 	response.JSON(w, http.StatusOK, "Plano de backup encontrado", res, nil)
-}
-
-type listBackupPlanRequest struct {
-	ID              uuid.UUID                      `json:"id"`
-	Name            string                         `json:"name"`
-	BackupSizeBytes *big.Int                       `json:"backup_size_bytes"`
-	DeviceID        uuid.UUID                      `json:"device_id"`
-	CreatedAt       time.Time                      `json:"created_at"`
-	UpdatedAt       time.Time                      `json:"updated_at"`
-	WeekDay         []listbackupPlanWeekDayRequest `json:"week_days"`
-}
-
-type listbackupPlanWeekDayRequest struct {
-	ID           uuid.UUID `json:"id"`
-	Day          string    `json:"day"`
-	TimeDay      time.Time `json:"time_day"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-	BackupPlanID uuid.UUID `json:"backup_plan_id"`
 }
 
 func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Request) {
@@ -219,12 +173,12 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	list := make([]listBackupPlanRequest, 0, len(backupPlans))
+	list := make([]dto.ListBackupPlanRequest, 0, len(backupPlans))
 	for _, backupPlan := range backupPlans {
 		// Converte os weekdays do domain para o formato de response
-		weekDays := make([]listbackupPlanWeekDayRequest, 0, len(backupPlan.WeekDays))
+		weekDays := make([]dto.ListbackupPlanWeekDayRequest, 0, len(backupPlan.WeekDays))
 		for _, wd := range backupPlan.WeekDays {
-			weekDays = append(weekDays, listbackupPlanWeekDayRequest{
+			weekDays = append(weekDays, dto.ListbackupPlanWeekDayRequest{
 				ID:           wd.ID,
 				Day:          wd.Day,
 				TimeDay:      wd.TimeDay,
@@ -234,7 +188,7 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 			})
 		}
 
-		list = append(list, listBackupPlanRequest{
+		list = append(list, dto.ListBackupPlanRequest{
 			ID:              backupPlan.ID,
 			Name:            backupPlan.Name,
 			BackupSizeBytes: backupPlan.BackupSizeBytes,
@@ -248,18 +202,6 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 	response.JSON(w, http.StatusOK, "Lista de planos de backup", list, nil)
 }
 
-type updateBackupPlanRequest struct {
-	Name            string                           `json:"name"`
-	BackupSizeBytes *big.Int                         `json:"backup_size_bytes"`
-	DeviceID        uuid.UUID                        `json:"device_id"`
-	WeekDays        []updatebackupPlanWeekDayRequest `json:"week_days"`
-}
-
-type updatebackupPlanWeekDayRequest struct {
-	Day     string    `json:"day"`
-	TimeDay time.Time `json:"time_day"`
-}
-
 func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
@@ -267,7 +209,7 @@ func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var req updateBackupPlanRequest
+	var req dto.UpdateBackupPlanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
@@ -315,8 +257,7 @@ func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Re
 }
 
 func (bph *BackupPlanHandler) DeleteBackupPlan(w http.ResponseWriter, r *http.Request) {
-	backupPlanId := chi.URLParam(r, "id")
-	id, err := uuid.Parse(backupPlanId)
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
