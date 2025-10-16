@@ -86,22 +86,36 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 		return err
 	}
 
-	backupPlan = &domain.BackupPlan{
+	updatedBackupPlan := &domain.BackupPlan{
 		ID:              backupPlan.ID,
 		Name:            util.Coalesce(backupPlan.Name, existingBackupPlan.Name),
 		BackupSizeBytes: util.Coalesce(backupPlan.BackupSizeBytes, existingBackupPlan.BackupSizeBytes),
 		DeviceID:        util.Coalesce(backupPlan.DeviceID, existingBackupPlan.DeviceID),
 	}
 
-	backupPlan.WeekDays = make([]domain.BackupPlanWeekDay, len(backupPlan.WeekDays))
-	for i, wd := range backupPlan.WeekDays {
-		backupPlan.WeekDays[i] = domain.BackupPlanWeekDay{
-			Day:     util.Coalesce(wd.Day, existingBackupPlan.WeekDays[i].Day),
-			TimeDay: util.Coalesce(wd.TimeDay, existingBackupPlan.WeekDays[i].TimeDay),
+	// Corrigindo o tratamento dos WeekDays
+	if len(backupPlan.WeekDays) > 0 {
+		// Se veio WeekDays no request, usar os dados fornecidos com coalesce
+		updatedBackupPlan.WeekDays = make([]domain.BackupPlanWeekDay, len(backupPlan.WeekDays))
+		for i, wd := range backupPlan.WeekDays {
+			// Verificar se o índice existe no existingBackupPlan
+			var existingDay *domain.BackupPlanWeekDay
+			if i < len(existingBackupPlan.WeekDays) {
+				existingDay = &existingBackupPlan.WeekDays[i]
+			}
+
+			updatedBackupPlan.WeekDays[i] = domain.BackupPlanWeekDay{
+				Day:       util.Coalesce(wd.Day, existingDay.Day),
+				TimeDay:   util.Coalesce(wd.TimeDay, existingDay.TimeDay),
+				CreatedAt: util.Coalesce(wd.CreatedAt, existingDay.CreatedAt),
+			}
 		}
+	} else {
+		// Se não veio WeekDays no request, manter os existentes
+		updatedBackupPlan.WeekDays = existingBackupPlan.WeekDays
 	}
 
-	err = bps.backupPlanRepo.UpdateBackupPlan(ctx, backupPlan)
+	err = bps.backupPlanRepo.UpdateBackupPlan(ctx, updatedBackupPlan)
 	if err != nil {
 		return err
 	}

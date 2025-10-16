@@ -73,6 +73,7 @@ func NewRouter(
 		r.Post("/backup_plans", backupPlanHandler.CreateBackupPlan)
 		r.Get("/backup_plans/{id}", backupPlanHandler.GetBackupPlan)
 		r.Get("/backup_plans", backupPlanHandler.ListBackupPlans)
+		r.Put("/backup_plans/{id}", backupPlanHandler.UpdateBackupPlan)
 		r.Delete("/backup_plans/{id}", backupPlanHandler.DeleteBackupPlan)
 	})
 

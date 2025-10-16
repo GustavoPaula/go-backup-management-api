@@ -28,7 +28,7 @@ type createBackupPlanRequest struct {
 	Name            string                           `json:"name"`
 	BackupSizeBytes *big.Int                         `json:"backup_size_bytes"`
 	DeviceID        uuid.UUID                        `json:"device_id"`
-	WeekDays        []createbackupPlanWeekDayRequest `json:"week_day"`
+	WeekDays        []createbackupPlanWeekDayRequest `json:"week_days"`
 }
 
 type createbackupPlanWeekDayRequest struct {
@@ -92,7 +92,7 @@ type getBackupPlanResponse struct {
 	DeviceID        uuid.UUID                      `json:"device_id"`
 	CreatedAt       time.Time                      `json:"created_at"`
 	UpdatedAt       time.Time                      `json:"updated_at"`
-	WeekDays        []getBackupPlanWeekDayResponse `json:"week_day"`
+	WeekDays        []getBackupPlanWeekDayResponse `json:"week_days"`
 }
 
 type getBackupPlanWeekDayResponse struct {
@@ -165,7 +165,7 @@ type listBackupPlanRequest struct {
 	DeviceID        uuid.UUID                      `json:"device_id"`
 	CreatedAt       time.Time                      `json:"created_at"`
 	UpdatedAt       time.Time                      `json:"updated_at"`
-	WeekDay         []listbackupPlanWeekDayRequest `json:"week_day"`
+	WeekDay         []listbackupPlanWeekDayRequest `json:"week_days"`
 }
 
 type listbackupPlanWeekDayRequest struct {
@@ -252,7 +252,7 @@ type updateBackupPlanRequest struct {
 	Name            string                           `json:"name"`
 	BackupSizeBytes *big.Int                         `json:"backup_size_bytes"`
 	DeviceID        uuid.UUID                        `json:"device_id"`
-	WeekDay         []updatebackupPlanWeekDayRequest `json:"week_day"`
+	WeekDays        []updatebackupPlanWeekDayRequest `json:"week_days"`
 }
 
 type updatebackupPlanWeekDayRequest struct {
@@ -261,8 +261,7 @@ type updatebackupPlanWeekDayRequest struct {
 }
 
 func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Request) {
-	backupPlanId := chi.URLParam(r, "id")
-	id, err := uuid.Parse(backupPlanId)
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
@@ -282,8 +281,8 @@ func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Re
 		DeviceID:        req.DeviceID,
 	}
 
-	backupPlan.WeekDays = make([]domain.BackupPlanWeekDay, len(req.WeekDay))
-	for i, wdReq := range req.WeekDay {
+	backupPlan.WeekDays = make([]domain.BackupPlanWeekDay, len(req.WeekDays))
+	for i, wdReq := range req.WeekDays {
 		backupPlan.WeekDays[i] = domain.BackupPlanWeekDay{
 			Day:          wdReq.Day,
 			TimeDay:      wdReq.TimeDay,

@@ -14,7 +14,7 @@ CREATE TABLE "backup_plans" (
 -- CreateTable
 CREATE TABLE "backup_plans_week_days" (
     "id" uuid PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-    "day" "week_day_enum" NOT NULL,
+    "day" "week_days_enum" NOT NULL,
     "time_day" TIME NOT NULL,
     "backup_plan_id" uuid NOT NULL,
     "created_at" timestamptz NOT NULL DEFAULT (now()),

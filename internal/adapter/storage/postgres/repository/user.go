@@ -175,13 +175,14 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 }
 
 func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) error {
+	now := time.Now()
 	query := `
 		UPDATE users
 		SET username = $1, email = $2, password = $3, role = $4, updated_at = $5
 		WHERE id = $6
 	`
 
-	result, err := ur.db.Exec(ctx, query, user.Username, user.Email, user.Password, user.Role, time.Now(), user.ID)
+	result, err := ur.db.Exec(ctx, query, user.Username, user.Email, user.Password, user.Role, now, user.ID)
 	if err != nil {
 		return handleDatabaseError(err)
 	}

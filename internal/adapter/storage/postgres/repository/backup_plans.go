@@ -47,11 +47,16 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 		return err
 	}
 
+	if len(backupPlan.WeekDays) == 0 {
+		slog.Error("Plano de backup sem dias configurados")
+		return domain.ErrBadRequest
+	}
+
 	queryWeek := `
 			INSERT INTO backup_plans_week_days (id, day, time_day, backup_plan_id, created_at, updated_at)
       VALUES ($1, $2, $3, $4, $5, $6)
 		`
-	for _, day := range backupPlan.WeekDay {
+	for _, day := range backupPlan.WeekDays {
 		day.BackupPlanID = backupPlan.ID
 
 		result, err := tx.Exec(ctx, queryWeek, day.ID, day.Day, day.TimeDay, day.BackupPlanID, now, now)
@@ -92,7 +97,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
                wd.created_at,
                wd.updated_at
         FROM backup_plans bp
-        INNER JOIN backup_plans_week_day wd ON (bp.id = wd.backup_plan_id)
+        INNER JOIN backup_plans_week_days wd ON (bp.id = wd.backup_plan_id)
         WHERE bp.id = $1;
     `
 
@@ -134,7 +139,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 				DeviceID:        bp.DeviceID,
 				CreatedAt:       bp.CreatedAt,
 				UpdatedAt:       bp.UpdatedAt,
-				WeekDay:         []domain.BackupPlanWeekDay{},
+				WeekDays:        []domain.BackupPlanWeekDay{},
 			}
 		}
 
@@ -154,7 +159,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 }
 
 func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limit int) ([]domain.BackupPlan, error) {
-	backupPlansMap := make(map[uuid.UUID]*domain.BackupPlan) // Map com UUID como chave
+	backupPlansMap := make(map[uuid.UUID]*domain.BackupPlan)
 	offset := (page - 1) * limit
 	query := `
         SELECT bp.id, 
@@ -170,7 +175,7 @@ func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limi
                wd.created_at,
                wd.updated_at
         FROM backup_plans bp
-            INNER JOIN backup_plans_week_day wd ON (bp.id = wd.backup_plan_id)
+            INNER JOIN backup_plans_week_days wd ON (bp.id = wd.backup_plan_id)
         ORDER BY bp.name
         LIMIT $1 OFFSET $2
     `
@@ -206,13 +211,10 @@ func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limi
 
 		bp.BackupSizeBytes = big.NewInt(backupSizeBytes)
 
-		// Verifica se o backup plan já existe no map
 		if existingBP, exists := backupPlansMap[bp.ID]; exists {
-			// Adiciona o weekday ao backup plan existente
-			existingBP.WeekDay = append(existingBP.WeekDay, wd)
+			existingBP.WeekDays = append(existingBP.WeekDays, wd)
 		} else {
-			// Cria um novo backup plan no map
-			bp.WeekDay = []domain.BackupPlanWeekDay{wd}
+			bp.WeekDays = []domain.BackupPlanWeekDay{wd}
 			backupPlansMap[bp.ID] = &bp
 		}
 	}
@@ -221,12 +223,10 @@ func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limi
 		return nil, handleDatabaseError(err)
 	}
 
-	// Se não encontrou nenhum registro
 	if len(backupPlansMap) == 0 {
 		return nil, domain.ErrDataNotFound
 	}
 
-	// Converte o map para slice
 	backupPlans := make([]domain.BackupPlan, 0, len(backupPlansMap))
 	for _, bp := range backupPlansMap {
 		backupPlans = append(backupPlans, *bp)
@@ -236,6 +236,57 @@ func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limi
 }
 
 func (bpr *backupPlanRepository) UpdateBackupPlan(ctx context.Context, backupPlan *domain.BackupPlan) error {
+	now := time.Now()
+
+	tx, err := bpr.db.Begin(ctx)
+	if err != nil {
+		slog.Error("Erro ao iniciar transação", "error", err.Error())
+		return handleDatabaseError(err)
+	}
+	defer tx.Rollback(ctx)
+
+	queryPlan := `
+		UPDATE backup_plans 
+		SET name = $1, backup_size_bytes = $2, device_id = $3, updated_at = $4
+    WHERE id = $5
+	`
+
+	result, err := tx.Exec(ctx, queryPlan, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, backupPlan.ID)
+	if err != nil {
+		slog.Error("Erro ao atualizar na tabela plano de backup", "error", err)
+		return handleDatabaseError(err)
+	}
+
+	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
+		slog.Error("Nenhuma linha foi afetada", "error", err)
+		return err
+	}
+
+	queryDelete := `DELETE FROM backup_plans_week_days WHERE backup_plan_id = $1`
+	_, err = tx.Exec(ctx, queryDelete, backupPlan.ID)
+	if err != nil {
+		slog.Error("Erro ao deletar dias da semana existentes", "error", err)
+		return handleDatabaseError(err)
+	}
+
+	queryInsert := `
+		INSERT INTO backup_plans_week_days (backup_plan_id, day, time_day, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+
+	for _, day := range backupPlan.WeekDays {
+		_, err := tx.Exec(ctx, queryInsert, backupPlan.ID, day.Day, day.TimeDay, day.CreatedAt, now)
+		if err != nil {
+			slog.Error("Erro ao inserir novo dia da semana", "error", err)
+			return handleDatabaseError(err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		slog.Error("Erro ao fazer commit", "error", err)
+		return handleDatabaseError(err)
+	}
+
 	return nil
 }
 
@@ -247,7 +298,7 @@ func (bpr *backupPlanRepository) DeleteBackupPlan(ctx context.Context, id uuid.U
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, `DELETE FROM backup_plans_week_day WHERE backup_plan_id = $1`, id)
+	_, err = tx.Exec(ctx, `DELETE FROM backup_plans_week_days WHERE backup_plan_id = $1`, id)
 	if err != nil {
 		return handleDatabaseError(err)
 	}
