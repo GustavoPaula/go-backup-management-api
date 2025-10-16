@@ -56,7 +56,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 
 		result, err := tx.Exec(ctx, queryWeek, day.ID, day.Day, day.TimeDay, day.BackupPlanID, now, now)
 		if err != nil {
-			slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
+			slog.Error("Erro ao inserir na tabela plano de backup dias de semana", "error", err)
 			return handleDatabaseError(err)
 		}
 

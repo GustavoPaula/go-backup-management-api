@@ -25,7 +25,7 @@ func NewBackupPlanHandler(svc port.BackupPlanService) *BackupPlanHandler {
 }
 
 func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Request) {
-	var req dto.CreateBackupPlanRequest
+	var req dto.BackupPlanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
@@ -106,9 +106,9 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	weekDays := make([]dto.GetBackupPlanWeekDayResponse, len(backupPlan.WeekDays))
+	weekDays := make([]dto.BackupPlanWeekDayResponse, len(backupPlan.WeekDays))
 	for i, wd := range backupPlan.WeekDays {
-		weekDays[i] = dto.GetBackupPlanWeekDayResponse{
+		weekDays[i] = dto.BackupPlanWeekDayResponse{
 			ID:           wd.ID,
 			Day:          wd.Day,
 			TimeDay:      wd.TimeDay,
@@ -118,7 +118,7 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 		}
 	}
 
-	res := dto.GetBackupPlanResponse{
+	res := dto.BackupPlanResponse{
 		ID:              backupPlan.ID,
 		Name:            backupPlan.Name,
 		BackupSizeBytes: backupPlan.BackupSizeBytes,
@@ -173,12 +173,12 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 		}
 	}
 
-	list := make([]dto.ListBackupPlanRequest, 0, len(backupPlans))
+	list := make([]dto.BackupPlanRequest, 0, len(backupPlans))
 	for _, backupPlan := range backupPlans {
 		// Converte os weekdays do domain para o formato de response
-		weekDays := make([]dto.ListbackupPlanWeekDayRequest, 0, len(backupPlan.WeekDays))
+		weekDays := make([]dto.BackupPlanWeekDayRequest, 0, len(backupPlan.WeekDays))
 		for _, wd := range backupPlan.WeekDays {
-			weekDays = append(weekDays, dto.ListbackupPlanWeekDayRequest{
+			weekDays = append(weekDays, dto.BackupPlanWeekDayRequest{
 				ID:           wd.ID,
 				Day:          wd.Day,
 				TimeDay:      wd.TimeDay,
@@ -188,14 +188,14 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 			})
 		}
 
-		list = append(list, dto.ListBackupPlanRequest{
+		list = append(list, dto.BackupPlanRequest{
 			ID:              backupPlan.ID,
 			Name:            backupPlan.Name,
 			BackupSizeBytes: backupPlan.BackupSizeBytes,
 			DeviceID:        backupPlan.DeviceID,
 			CreatedAt:       backupPlan.CreatedAt,
 			UpdatedAt:       backupPlan.UpdatedAt,
-			WeekDay:         weekDays,
+			WeekDays:        weekDays,
 		})
 	}
 
@@ -209,7 +209,7 @@ func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	var req dto.UpdateBackupPlanRequest
+	var req dto.BackupPlanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return

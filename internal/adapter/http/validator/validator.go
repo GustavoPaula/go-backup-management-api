@@ -87,7 +87,7 @@ func StringValidate(str string) error {
 	return nil
 }
 
-func WeekDaysValidate(days []dto.CreatebackupPlanWeekDayRequest) error {
+func WeekDaysValidate(days []dto.BackupPlanWeekDayRequest) error {
 	if len(days) == 0 {
 		return ErrValidationRequiredField
 	}
