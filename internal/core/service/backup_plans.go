@@ -5,7 +5,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
-	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/utils"
 	"github.com/google/uuid"
 )
 
@@ -88,9 +88,9 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 
 	updatedBackupPlan := &domain.BackupPlan{
 		ID:              backupPlan.ID,
-		Name:            util.Coalesce(backupPlan.Name, existingBackupPlan.Name),
-		BackupSizeBytes: util.Coalesce(backupPlan.BackupSizeBytes, existingBackupPlan.BackupSizeBytes),
-		DeviceID:        util.Coalesce(backupPlan.DeviceID, existingBackupPlan.DeviceID),
+		Name:            utils.Coalesce(backupPlan.Name, existingBackupPlan.Name),
+		BackupSizeBytes: utils.Coalesce(backupPlan.BackupSizeBytes, existingBackupPlan.BackupSizeBytes),
+		DeviceID:        utils.Coalesce(backupPlan.DeviceID, existingBackupPlan.DeviceID),
 	}
 
 	// Corrigindo o tratamento dos WeekDays
@@ -105,9 +105,9 @@ func (bps *backupPlanService) UpdateBackupPlan(ctx context.Context, backupPlan *
 			}
 
 			updatedBackupPlan.WeekDays[i] = domain.BackupPlanWeekDay{
-				Day:       util.Coalesce(wd.Day, existingDay.Day),
-				TimeDay:   util.Coalesce(wd.TimeDay, existingDay.TimeDay),
-				CreatedAt: util.Coalesce(wd.CreatedAt, existingDay.CreatedAt),
+				Day:       utils.Coalesce(wd.Day, existingDay.Day),
+				TimeDay:   utils.Coalesce(wd.TimeDay, existingDay.TimeDay),
+				CreatedAt: utils.Coalesce(wd.CreatedAt, existingDay.CreatedAt),
 			}
 		}
 	} else {

@@ -26,7 +26,7 @@ func NewBackupPlanHandler(svc port.BackupPlanService) *BackupPlanHandler {
 func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Request) {
 	var req dto.BackupPlanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil, nil)
 		return
 	}
 	defer r.Body.Close()
@@ -54,13 +54,13 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	response.JSON(w, http.StatusCreated, "Plano de backup criado com sucesso", nil, nil)
+	response.JSON(w, http.StatusCreated, "Plano de backup criado com sucesso", nil, nil, nil)
 }
 
 func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil, nil)
 		return
 	}
 
@@ -92,7 +92,7 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 		WeekDays:        weekDays,
 	}
 
-	response.JSON(w, http.StatusOK, "Plano de backup encontrado", res, nil)
+	response.JSON(w, http.StatusOK, "Plano de backup encontrado", res, nil, nil)
 }
 
 func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Request) {
@@ -100,19 +100,19 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 	limitStr := r.URL.Query().Get("limit")
 
 	if pageStr == "" || limitStr == "" {
-		response.JSON(w, http.StatusBadRequest, "Page e limit são obrigatórios", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "Page e limit são obrigatórios", nil, nil, nil)
 		return
 	}
 
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "Page inválido", nil, err.Error())
+		response.JSON(w, http.StatusBadRequest, "Page inválido", nil, err.Error(), nil)
 		return
 	}
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "Limit inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "Limit inválido", nil, nil, nil)
 		return
 	}
 
@@ -148,19 +148,19 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 		})
 	}
 
-	response.JSON(w, http.StatusOK, "Lista de planos de backup", list, nil)
+	response.JSON(w, http.StatusOK, "Lista de planos de backup", list, nil, nil)
 }
 
 func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil, nil)
 		return
 	}
 
 	var req dto.BackupPlanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil, nil)
 		return
 	}
 	defer r.Body.Close()
@@ -187,13 +187,13 @@ func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	response.JSON(w, http.StatusNoContent, "Plano de backup atualizado", nil, nil)
+	response.JSON(w, http.StatusNoContent, "Plano de backup atualizado", nil, nil, nil)
 }
 
 func (bph *BackupPlanHandler) DeleteBackupPlan(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
-		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil, nil)
 		return
 	}
 
@@ -203,5 +203,5 @@ func (bph *BackupPlanHandler) DeleteBackupPlan(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	response.JSON(w, http.StatusNoContent, "Plano de backup deletado com sucesso", nil, nil)
+	response.JSON(w, http.StatusNoContent, "Plano de backup deletado com sucesso", nil, nil, nil)
 }

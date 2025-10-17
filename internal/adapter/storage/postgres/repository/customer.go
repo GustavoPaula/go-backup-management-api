@@ -23,19 +23,17 @@ func NewCustomerRepository(db *postgres.DB) *customerRepository {
 
 func (cr *customerRepository) CreateCustomer(ctx context.Context, customer *domain.Customer) error {
 	now := time.Now()
-
 	query := `
-		INSERT INTO customers (name, created_at, updated_at)
-		VALUES ($1, $2, $3)
-		RETURNING id, name, created_at, updated_at
+		INSERT INTO customers (id, name, created_at, updated_at)
+		VALUES ($1, $2, $3, $4)
 	`
-	result, err := cr.db.Exec(ctx, query, customer.Name, now, now)
+	result, err := cr.db.Exec(ctx, query, customer.ID, customer.Name, now, now)
 	if err != nil {
 		return handleDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi inserida", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao inserir cliente")
 		return domain.ErrDataNotFound
 	}
 
@@ -44,13 +42,11 @@ func (cr *customerRepository) CreateCustomer(ctx context.Context, customer *doma
 
 func (cr *customerRepository) GetCustomerByID(ctx context.Context, id uuid.UUID) (*domain.Customer, error) {
 	var customer domain.Customer
-
 	query := `
 		SELECT id, name, created_at, updated_at
 		FROM customers
 		WHERE id = $1
 	`
-
 	err := cr.db.QueryRow(ctx, query, id).Scan(
 		&customer.ID,
 		&customer.Name,
@@ -72,13 +68,11 @@ func (cr *customerRepository) GetCustomerByID(ctx context.Context, id uuid.UUID)
 
 func (cr *customerRepository) GetCustomerByName(ctx context.Context, name string) (*domain.Customer, error) {
 	var customer domain.Customer
-
 	query := `
 		SELECT id, name, created_at, updated_at
 		FROM customers
 		WHERE name = $1
 	`
-
 	err := cr.db.QueryRow(ctx, query, name).Scan(
 		&customer.ID,
 		&customer.Name,
@@ -91,7 +85,7 @@ func (cr *customerRepository) GetCustomerByName(ctx context.Context, name string
 	}
 
 	if err != nil {
-		slog.Error("Erro ao buscar customer", "error", err.Error())
+		slog.Error("Erro ao buscar customer pelo nome", "error", err.Error())
 		return nil, handleDatabaseError(err)
 	}
 
@@ -109,10 +103,9 @@ func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int
 		ORDER BY name
 		LIMIT $1 OFFSET $2
 	`
-
 	rows, err := cr.db.Query(ctx, query, limit, offset)
 	if err != nil {
-		slog.Error("Erro ao buscar customers", "error", err)
+		slog.Error("Erro ao buscar lista de clientes", "error", err.Error())
 		return nil, handleDatabaseError(err)
 	}
 	defer rows.Close()
@@ -125,7 +118,7 @@ func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int
 			&customer.UpdatedAt,
 		)
 		if err != nil {
-			slog.Error("Erro ao fazer rows scan no List customers", "error", err.Error())
+			slog.Error("Erro ao retornar a lista de clientes", "error", err.Error())
 			return nil, handleDatabaseError(err)
 		}
 
@@ -137,14 +130,12 @@ func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int
 
 func (cr *customerRepository) UpdateCustomer(ctx context.Context, customer *domain.Customer) error {
 	now := time.Now()
-
 	query := `
 		UPDATE customers
 		SET name = $1, updated_at = $2
 		WHERE id = $3
 		RETURNING id, name, created_at, updated_at
 	`
-
 	result, err := cr.db.Exec(ctx, query, customer.Name, now, customer.ID)
 	if err != nil {
 		slog.Error("Erro ao atualizar os dados do customers", "error", err.Error())
@@ -152,7 +143,7 @@ func (cr *customerRepository) UpdateCustomer(ctx context.Context, customer *doma
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi inserida", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao atualizar cliente")
 		return domain.ErrDataNotFound
 	}
 
@@ -166,7 +157,7 @@ func (cr *customerRepository) DeleteCustomer(ctx context.Context, id uuid.UUID) 
 	`
 	_, err := cr.db.Exec(ctx, query, id)
 	if err != nil {
-		slog.Error("Erro ao deletar customers", "error", err)
+		slog.Error("Erro ao deletar cliente", "error", err)
 		return handleDatabaseError(err)
 	}
 

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/dto"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/utils"
 )
 
 type AuthHandler struct {
@@ -29,14 +29,14 @@ func NewAuthHandler(svc port.AuthService) *AuthHandler {
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
+		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil, nil)
 		return
 	}
 	defer r.Body.Close()
 
 	if err := ah.validator.Struct(req); err != nil {
-		slog.Error("Erro nos dados de entrada", "error", err.Error())
-		response.JSON(w, http.StatusBadRequest, "Dados de entrada inválidos", nil, domain.ErrBadRequest.Error())
+		errorsMap := utils.ValidationErrorsToMap(err)
+		response.JSON(w, http.StatusBadRequest, "Dados de entrada inválidos", nil, domain.ErrBadRequest.Error(), errorsMap)
 		return
 	}
 
@@ -46,5 +46,5 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.JSON(w, http.StatusOK, "Autenticado com sucesso", token, nil)
+	response.JSON(w, http.StatusOK, "Autenticado com sucesso", token, nil, nil)
 }

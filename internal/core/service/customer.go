@@ -5,7 +5,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
-	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/utils"
 	"github.com/google/uuid"
 )
 
@@ -79,7 +79,7 @@ func (cs *customerService) UpdateCustomer(ctx context.Context, customer *domain.
 
 	customer = &domain.Customer{
 		ID:   customer.ID,
-		Name: util.Coalesce(customer.Name, existingCustomer.Name),
+		Name: utils.Coalesce(customer.Name, existingCustomer.Name),
 	}
 
 	err = cs.repo.UpdateCustomer(ctx, customer)

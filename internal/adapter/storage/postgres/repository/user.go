@@ -30,12 +30,12 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 	`
 	result, err := ur.db.Exec(ctx, query, user.ID, user.Username, user.Email, user.Password, user.Role, now, now)
 	if err != nil {
-		slog.Error("Falha ao inserir usuário", "error", err)
+		slog.Error("Erro ao inserir usuário", "error", err.Error())
 		return handleDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi inserida", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao criar usuário")
 		return domain.ErrDataNotFound
 	}
 
@@ -44,7 +44,6 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 
 func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var user domain.User
-
 	query := `
 		SELECT id, username, email, password, role, created_at, updated_at
 		FROM users
@@ -74,7 +73,6 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 
 func (ur *userRepository) GetUserByUsername(ctx context.Context, username string) (*domain.User, error) {
 	var user domain.User
-
 	query := `
 		SELECT id, username, email, password, role, created_at, updated_at
 		FROM users
@@ -104,7 +102,6 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 
 func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
-
 	query := `
 		SELECT id, username, email, password, role, created_at, updated_at
 		FROM users
@@ -185,7 +182,7 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) err
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi afetada ao atualizar usuário", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao atualizar usuário")
 		return domain.ErrDataNotFound
 	}
 
@@ -204,7 +201,7 @@ func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi afetada ao deletar usuário", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao deletar usuário")
 		return domain.ErrDataNotFound
 	}
 

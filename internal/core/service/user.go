@@ -6,7 +6,7 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
-	"github.com/GustavoPaula/go-backup-management-api/internal/core/util"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/utils"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -99,9 +99,9 @@ func (us *userService) UpdateUser(ctx context.Context, user *domain.User) error 
 
 	user = &domain.User{
 		ID:       user.ID,
-		Username: util.Coalesce(user.Username, existingUser.Username),
-		Email:    util.Coalesce(user.Email, existingUser.Email),
-		Role:     util.Coalesce(user.Role, existingUser.Role),
+		Username: utils.Coalesce(user.Username, existingUser.Username),
+		Email:    utils.Coalesce(user.Email, existingUser.Email),
+		Role:     utils.Coalesce(user.Role, existingUser.Role),
 	}
 
 	if user.Password != "" {
