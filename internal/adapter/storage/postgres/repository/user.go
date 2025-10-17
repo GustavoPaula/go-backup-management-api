@@ -30,6 +30,7 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 	`
 	result, err := ur.db.Exec(ctx, query, user.ID, user.Username, user.Email, user.Password, user.Role, now, now)
 	if err != nil {
+		slog.Error("Falha ao inserir usuário", "error", err)
 		return handleDatabaseError(err)
 	}
 
@@ -49,7 +50,6 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 		FROM users
 		WHERE id = $1
 	`
-
 	err := ur.db.QueryRow(ctx, query, id).Scan(
 		&user.ID,
 		&user.Username,
@@ -61,11 +61,11 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 	)
 
 	if err == pgx.ErrNoRows {
-		slog.Error("Nenhum registro encontrado", "error", err)
 		return nil, domain.ErrDataNotFound
 	}
 
 	if err != nil {
+		slog.Error("Erro ao buscar usuário pelo id", "error", err.Error())
 		return nil, handleDatabaseError(err)
 	}
 
@@ -80,7 +80,6 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 		FROM users
 		WHERE username = $1
 	`
-
 	err := ur.db.QueryRow(ctx, query, username).Scan(
 		&user.ID,
 		&user.Username,
@@ -92,11 +91,11 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 	)
 
 	if err == pgx.ErrNoRows {
-		slog.Error("Nenhum registro encontrado", "error", err)
 		return nil, domain.ErrDataNotFound
 	}
 
 	if err != nil {
+		slog.Error("Erro ao buscar usuário pelo username")
 		return nil, handleDatabaseError(err)
 	}
 
@@ -111,7 +110,6 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 		FROM users
 		WHERE email = $1
 	`
-
 	err := ur.db.QueryRow(ctx, query, email).Scan(
 		&user.ID,
 		&user.Username,
@@ -123,11 +121,11 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 	)
 
 	if err == pgx.ErrNoRows {
-		slog.Error("Nenhum registro encontrado", "error", err)
 		return nil, domain.ErrDataNotFound
 	}
 
 	if err != nil {
+		slog.Error("Erro ao buscar usuário pelo e-mail", "error", err.Error())
 		return nil, handleDatabaseError(err)
 	}
 
@@ -145,7 +143,6 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 		ORDER BY username
 		LIMIT $1 OFFSET $2
 	`
-
 	rows, err := ur.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		slog.Error("Erro ao buscar usuários", "error", err)
@@ -164,8 +161,8 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 			&user.UpdatedAt,
 		)
 		if err != nil {
-			slog.Error("Erro ao fazer rows scan no List Users", "error", err.Error())
-			return nil, err
+			slog.Error("Erro ao obter lista de usuários", "error", err.Error())
+			return nil, handleDatabaseError(err)
 		}
 
 		users = append(users, user)
@@ -181,14 +178,14 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) err
 		SET username = $1, email = $2, password = $3, role = $4, updated_at = $5
 		WHERE id = $6
 	`
-
 	result, err := ur.db.Exec(ctx, query, user.Username, user.Email, user.Password, user.Role, now, user.ID)
 	if err != nil {
+		slog.Error("Erro ao atualizar o usuário", "error", err.Error())
 		return handleDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi inserida", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao atualizar usuário", "error", err)
 		return domain.ErrDataNotFound
 	}
 
@@ -202,11 +199,12 @@ func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	`
 	result, err := ur.db.Exec(ctx, query, id)
 	if err != nil {
+		slog.Error("Erro ao deletar usuário", "error", err.Error())
 		return handleDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi inserida", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao deletar usuário", "error", err)
 		return domain.ErrDataNotFound
 	}
 

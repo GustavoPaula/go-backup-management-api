@@ -3,6 +3,12 @@ package domain
 import "errors"
 
 var (
+	ErrForeignKeyViolation         = errors.New("FOREIGN_KEY_VIOLATION")
+	ErrDeadlock                    = errors.New("DEADLOCK")
+	ErrTransactionConflict         = errors.New("TRANSACTION_CONFLICT")
+	ErrLockNotAvailable            = errors.New("LOCK_NOT_AVAILABLE")
+	ErrPermissionDenied            = errors.New("PERMISSION_DENIED")
+	ErrDatabaseUnavailable         = errors.New("DATABASE_UNAVAILABLE")
 	ErrBadRequest                  = errors.New("BAD_REQUEST")
 	ErrServiceUnavailable          = errors.New("SERVICE_UNAVAILABLE")
 	ErrInternal                    = errors.New("INTERNAL_ERROR")
