@@ -5,55 +5,44 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/dto"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
-	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/validator"
+	"github.com/go-playground/validator/v10"
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 )
 
 type AuthHandler struct {
-	svc port.AuthService
+	validator *validator.Validate
+	svc       port.AuthService
 }
 
 func NewAuthHandler(svc port.AuthService) *AuthHandler {
+	validator := validator.New(validator.WithRequiredStructEnabled())
 	return &AuthHandler{
+		validator,
 		svc,
 	}
 }
 
-type loginRequest struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var body loginRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+	var req dto.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
 	defer r.Body.Close()
 
-	if err := validator.UsernameValidate(body.Username); err != nil {
-		response.JSON(w, http.StatusBadRequest, "Username inválido", nil, err.Error())
+	if err := ah.validator.Struct(req); err != nil {
+		slog.Error("Erro nos dados de entrada", "error", err.Error())
+		response.JSON(w, http.StatusBadRequest, "Dados de entrada inválidos", nil, domain.ErrBadRequest.Error())
 		return
 	}
 
-	if err := validator.PasswordValidate(body.Password); err != nil {
-		response.JSON(w, http.StatusBadRequest, "Password inválido", nil, err.Error())
-		return
-	}
-
-	token, err := ah.svc.Login(r.Context(), body.Username, body.Password)
+	token, err := ah.svc.Login(r.Context(), req.Username, req.Password)
 	if err != nil {
-		if err == domain.ErrDataNotFound || err == domain.ErrInvalidCredentials {
-			response.JSON(w, http.StatusUnauthorized, "Credenciais inválidas", nil, err.Error())
-			return
-		}
-
-		slog.Error("Login error", "error", err, "username", body.Username)
-		response.JSON(w, http.StatusInternalServerError, "Erro interno", nil, nil)
+		handleServiceError(w, err)
 		return
 	}
 

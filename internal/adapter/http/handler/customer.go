@@ -2,81 +2,62 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
-	"time"
 
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/dto"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
 type CustomerHandler struct {
-	svc port.CustomerService
+	validator *validator.Validate
+	svc       port.CustomerService
 }
 
 func NewCustomerHandler(svc port.CustomerService) *CustomerHandler {
+	validator := validator.New(validator.WithRequiredStructEnabled())
 	return &CustomerHandler{
+		validator,
 		svc,
 	}
 }
 
-type createCustomerRequest struct {
-	Name string `json:"name"`
-}
-
 func (ch *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request) {
-	var req createCustomerRequest
+	var req dto.CustomerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
+	defer r.Body.Close()
+
+	if err := ch.validator.Struct(req); err != nil {
+		slog.Error("Erro nos dados de entrada", "error", err.Error())
+		response.JSON(w, http.StatusBadRequest, "Dados de entrada inválidos", nil, domain.ErrBadRequest.Error())
+		return
+	}
 
 	customer := domain.Customer{
+		ID:   uuid.New(),
 		Name: req.Name,
 	}
 
 	err := ch.svc.CreateCustomer(r.Context(), &customer)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
 	response.JSON(w, http.StatusCreated, "Cliente cadastrado com sucesso", nil, nil)
 }
 
-type getCustomerResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
-	customerId := chi.URLParam(r, "id")
-	if customerId == "" {
-		response.JSON(w, http.StatusBadRequest, "ID do cliente é obrigatório", nil, nil)
-		return
-	}
-
-	id, err := uuid.Parse(customerId)
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
@@ -84,26 +65,11 @@ func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 
 	customer, err := ch.svc.GetCustomer(r.Context(), id)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
-	res := getCustomerResponse{
+	res := dto.CustomerResponse{
 		ID:        customer.ID,
 		Name:      customer.Name,
 		CreatedAt: customer.CreatedAt,
@@ -111,13 +77,6 @@ func (ch *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.JSON(w, http.StatusOK, "Cliente encontrado", res, nil)
-}
-
-type listCustomersResponse struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }
 
 func (ch *CustomerHandler) ListCustomers(w http.ResponseWriter, r *http.Request) {
@@ -143,28 +102,13 @@ func (ch *CustomerHandler) ListCustomers(w http.ResponseWriter, r *http.Request)
 
 	customers, err := ch.svc.ListCustomers(r.Context(), page, limit)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
-	list := make([]listCustomersResponse, 0, len(customers))
+	list := make([]dto.CustomerResponse, 0, len(customers))
 	for _, customer := range customers {
-		list = append(list, listCustomersResponse{
+		list = append(list, dto.CustomerResponse{
 			ID:        customer.ID,
 			Name:      customer.Name,
 			CreatedAt: customer.CreatedAt,
@@ -175,24 +119,25 @@ func (ch *CustomerHandler) ListCustomers(w http.ResponseWriter, r *http.Request)
 	response.JSON(w, http.StatusOK, "Lista de clientes", list, nil)
 }
 
-type updateCustomerRequest struct {
-	Name string `json:"name"`
-}
-
 func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request) {
-	customerId := chi.URLParam(r, "id")
-	id, err := uuid.Parse(customerId)
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
 	}
 
-	var req updateCustomerRequest
+	var req dto.CustomerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.JSON(w, http.StatusBadRequest, "JSON inválido", nil, nil)
 		return
 	}
 	defer r.Body.Close()
+
+	if err := ch.validator.Struct(req); err != nil {
+		slog.Error("Erro nos dados de entrada", "error", err.Error())
+		response.JSON(w, http.StatusBadRequest, "Dados de entrada inválidos", nil, domain.ErrBadRequest.Error())
+		return
+	}
 
 	customer := domain.Customer{
 		ID:   id,
@@ -200,38 +145,16 @@ func (ch *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request
 	}
 
 	err = ch.svc.UpdateCustomer(r.Context(), &customer)
-
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
 	response.JSON(w, http.StatusNoContent, "Cliente alterado com sucesso", nil, nil)
 }
 
 func (ch *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request) {
-	customerId := chi.URLParam(r, "id")
-	if customerId == "" {
-		response.JSON(w, http.StatusBadRequest, "ID do cliente é obrigatório", nil, nil)
-		return
-	}
-
-	id, err := uuid.Parse(customerId)
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		response.JSON(w, http.StatusBadRequest, "UUID inválido", nil, nil)
 		return
@@ -239,23 +162,8 @@ func (ch *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request
 
 	err = ch.svc.DeleteCustomer(r.Context(), id)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
 	response.JSON(w, http.StatusOK, "Cliente deletado com sucesso", nil, nil)

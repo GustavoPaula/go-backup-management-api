@@ -40,7 +40,7 @@ type BackupPlanWeekDayResponse struct {
 	ID           uuid.UUID `json:"id"`
 	Day          string    `json:"day"`
 	TimeDay      time.Time `json:"time_day"`
+	BackupPlanID uuid.UUID `json:"backup_plan_id"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
-	BackupPlanID uuid.UUID `json:"backup_plan_id"`
 }

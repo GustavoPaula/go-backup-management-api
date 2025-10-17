@@ -7,7 +7,6 @@ import (
 
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/dto"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
-	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/validator"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
 	"github.com/go-chi/chi/v5"
@@ -32,11 +31,6 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 	}
 	defer r.Body.Close()
 
-	if err := validator.WeekDaysValidate(req.WeekDays); err != nil {
-		response.JSON(w, http.StatusBadRequest, "Dados inválidos nos dias da semana do plano de backup", nil, err.Error())
-		return
-	}
-
 	backupPlan := &domain.BackupPlan{
 		ID:              uuid.New(),
 		Name:            req.Name,
@@ -56,23 +50,8 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 
 	err := bph.svc.CreateBackupPlan(r.Context(), backupPlan)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
 	response.JSON(w, http.StatusCreated, "Plano de backup criado com sucesso", nil, nil)
@@ -87,23 +66,8 @@ func (bph *BackupPlanHandler) GetBackupPlan(w http.ResponseWriter, r *http.Reque
 
 	backupPlan, err := bph.svc.GetBackupPlan(r.Context(), id)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
 	weekDays := make([]dto.BackupPlanWeekDayResponse, len(backupPlan.WeekDays))
@@ -154,31 +118,16 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 
 	backupPlans, err := bph.svc.ListBackupPlans(r.Context(), page, limit)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, nil)
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
-	list := make([]dto.BackupPlanRequest, 0, len(backupPlans))
+	list := make([]dto.BackupPlanResponse, 0, len(backupPlans))
 	for _, backupPlan := range backupPlans {
 		// Converte os weekdays do domain para o formato de response
-		weekDays := make([]dto.BackupPlanWeekDayRequest, 0, len(backupPlan.WeekDays))
+		weekDays := make([]dto.BackupPlanWeekDayResponse, 0, len(backupPlan.WeekDays))
 		for _, wd := range backupPlan.WeekDays {
-			weekDays = append(weekDays, dto.BackupPlanWeekDayRequest{
+			weekDays = append(weekDays, dto.BackupPlanWeekDayResponse{
 				ID:           wd.ID,
 				Day:          wd.Day,
 				TimeDay:      wd.TimeDay,
@@ -188,7 +137,7 @@ func (bph *BackupPlanHandler) ListBackupPlans(w http.ResponseWriter, r *http.Req
 			})
 		}
 
-		list = append(list, dto.BackupPlanRequest{
+		list = append(list, dto.BackupPlanResponse{
 			ID:              backupPlan.ID,
 			Name:            backupPlan.Name,
 			BackupSizeBytes: backupPlan.BackupSizeBytes,
@@ -234,23 +183,8 @@ func (bph *BackupPlanHandler) UpdateBackupPlan(w http.ResponseWriter, r *http.Re
 
 	err = bph.svc.UpdateBackupPlan(r.Context(), backupPlan)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
 	response.JSON(w, http.StatusNoContent, "Plano de backup atualizado", nil, nil)
@@ -265,23 +199,8 @@ func (bph *BackupPlanHandler) DeleteBackupPlan(w http.ResponseWriter, r *http.Re
 
 	err = bph.svc.DeleteBackupPlan(r.Context(), id)
 	if err != nil {
-		switch err {
-		case domain.ErrBadRequest:
-			response.JSON(w, http.StatusBadRequest, "Requisição inválida", nil, err.Error())
-			return
-		case domain.ErrDataNotFound:
-			response.JSON(w, http.StatusNotFound, "Recurso não encontrado", nil, err.Error())
-			return
-		case domain.ErrConflictingData:
-			response.JSON(w, http.StatusConflict, "Conflito de dados", nil, err.Error())
-			return
-		case domain.ErrServiceUnavailable:
-			response.JSON(w, http.StatusServiceUnavailable, "Serviço temporariamente indisponível", nil, err.Error())
-			return
-		default:
-			response.JSON(w, http.StatusInternalServerError, "Erro interno do servidor", nil, err.Error())
-			return
-		}
+		handleServiceError(w, err)
+		return
 	}
 
 	response.JSON(w, http.StatusNoContent, "Plano de backup deletado com sucesso", nil, nil)
