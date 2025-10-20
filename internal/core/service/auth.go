@@ -23,10 +23,7 @@ func NewAuthService(userRepo port.UserRepository, authRepo port.TokenService) po
 func (as *authService) Login(ctx context.Context, username, password string) (string, error) {
 	user, err := as.userRepo.GetUserByUsername(ctx, username)
 	if err != nil {
-		if err == domain.ErrDataNotFound {
-			return "", err
-		}
-		return "", domain.ErrInternal
+		return "", err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
