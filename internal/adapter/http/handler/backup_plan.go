@@ -9,16 +9,21 @@ import (
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/response"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/domain"
 	"github.com/GustavoPaula/go-backup-management-api/internal/core/port"
+	"github.com/GustavoPaula/go-backup-management-api/internal/core/utils"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
 type BackupPlanHandler struct {
-	svc port.BackupPlanService
+	validator *validator.Validate
+	svc       port.BackupPlanService
 }
 
 func NewBackupPlanHandler(svc port.BackupPlanService) *BackupPlanHandler {
+	validator := validator.New(validator.WithRequiredStructEnabled())
 	return &BackupPlanHandler{
+		validator,
 		svc,
 	}
 }
@@ -30,6 +35,12 @@ func (bph *BackupPlanHandler) CreateBackupPlan(w http.ResponseWriter, r *http.Re
 		return
 	}
 	defer r.Body.Close()
+
+	if err := bph.validator.Struct(req); err != nil {
+		errorsMap := utils.ValidationErrorsToMap(err)
+		response.JSON(w, http.StatusBadRequest, "Dados de entrada inválidos", nil, domain.ErrBadRequest.Error(), errorsMap)
+		return
+	}
 
 	backupPlan := &domain.BackupPlan{
 		ID:              uuid.New(),

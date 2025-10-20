@@ -59,7 +59,7 @@ func (cr *customerRepository) GetCustomerByID(ctx context.Context, id uuid.UUID)
 	}
 
 	if err != nil {
-		slog.Error("Erro ao buscar customer", "error", err.Error())
+		slog.Error("Erro ao buscar cliente", "error", err.Error())
 		return nil, handleDatabaseError(err)
 	}
 
@@ -85,7 +85,7 @@ func (cr *customerRepository) GetCustomerByName(ctx context.Context, name string
 	}
 
 	if err != nil {
-		slog.Error("Erro ao buscar customer pelo nome", "error", err.Error())
+		slog.Error("Erro ao buscar cliente pelo nome", "error", err.Error())
 		return nil, handleDatabaseError(err)
 	}
 
@@ -138,7 +138,7 @@ func (cr *customerRepository) UpdateCustomer(ctx context.Context, customer *doma
 	`
 	result, err := cr.db.Exec(ctx, query, customer.Name, now, customer.ID)
 	if err != nil {
-		slog.Error("Erro ao atualizar os dados do customers", "error", err.Error())
+		slog.Error("Erro ao atualizar os dados do clientes", "error", err.Error())
 		return handleDatabaseError(err)
 	}
 

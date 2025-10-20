@@ -43,7 +43,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-		slog.Error("Nenhuma linha foi inserida", "error", err)
+		slog.Error("Nenhuma linha foi afetada ao incluir o plano de backup")
 		return err
 	}
 
@@ -61,7 +61,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 		}
 
 		if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
-			slog.Error("Nenhuma linha foi inserida", "error", err)
+			slog.Error("Nenhuma linha foi afetada ao incluir os dias de semana do plano de backup")
 			return err
 		}
 	}
@@ -98,6 +98,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 
 	rows, err := bpr.db.Query(ctx, query, id)
 	if err != nil {
+		slog.Error("Erro ao buscar plano de backup pelo id", "error", err.Error())
 		return nil, handleDatabaseError(err)
 	}
 	defer rows.Close()
@@ -122,6 +123,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 			&wd.UpdatedAt,
 		)
 		if err != nil {
+			slog.Error("Erro ao buscar plano de backup pelo id", "error", err.Error())
 			return nil, handleDatabaseError(err)
 		}
 		bp.BackupSizeBytes = big.NewInt(backupSizeBytes)
