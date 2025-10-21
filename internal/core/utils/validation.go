@@ -21,6 +21,8 @@ func TranslateValidationError(e validator.FieldError) string {
 		return fmt.Sprintf("O campo '%s' deve ter no mínimo '%s' caracteres", strings.ToLower(e.Field()), e.Param())
 	case "max":
 		return fmt.Sprintf("O campo '%s' deve ter no máximo '%s' caracteres", strings.ToLower(e.Field()), e.Param())
+	case "alphanum":
+		return fmt.Sprintf("O campo '%s' deve contém apenas caracteres alfanuméricos", strings.ToLower(e.Field()))
 	default:
 		return fmt.Sprintf("O campo '%s' é inválido (%s)", strings.ToLower(e.Field()), e.Tag())
 	}
