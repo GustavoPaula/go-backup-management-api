@@ -31,7 +31,7 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 	result, err := ur.db.Exec(ctx, query, user.ID, user.Username, user.Email, user.Password, user.Role, now, now)
 	if err != nil {
 		slog.Error("Erro ao inserir usuário", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -65,7 +65,7 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 
 	if err != nil {
 		slog.Error("Erro ao buscar usuário pelo id", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	return &user, nil
@@ -94,7 +94,7 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 
 	if err != nil {
 		slog.Error("Erro ao buscar usuário pelo username")
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	return &user, nil
@@ -123,7 +123,7 @@ func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*do
 
 	if err != nil {
 		slog.Error("Erro ao buscar usuário pelo e-mail", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	return &user, nil
@@ -159,7 +159,7 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 		)
 		if err != nil {
 			slog.Error("Erro ao obter lista de usuários", "error", err.Error())
-			return nil, handleDatabaseError(err)
+			return nil, handlePgDatabaseError(err)
 		}
 
 		users = append(users, user)
@@ -178,7 +178,7 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) err
 	result, err := ur.db.Exec(ctx, query, user.Username, user.Email, user.Password, user.Role, now, user.ID)
 	if err != nil {
 		slog.Error("Erro ao atualizar o usuário", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -197,7 +197,7 @@ func (ur *userRepository) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	result, err := ur.db.Exec(ctx, query, id)
 	if err != nil {
 		slog.Error("Erro ao deletar usuário", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {

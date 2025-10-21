@@ -27,7 +27,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 	tx, err := bpr.db.Begin(ctx)
 	if err != nil {
 		slog.Error("Erro ao iniciar transação", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -39,7 +39,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 	result, err := tx.Exec(ctx, queryPlan, backupPlan.ID, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, now)
 	if err != nil {
 		slog.Error("Erro ao inserir na tabela plano de backup", "error", err)
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -57,7 +57,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 		result, err := tx.Exec(ctx, queryWeek, day.ID, day.Day, day.TimeDay, day.BackupPlanID, now, now)
 		if err != nil {
 			slog.Error("Erro ao inserir na tabela plano de backup dias de semana", "error", err)
-			return handleDatabaseError(err)
+			return handlePgDatabaseError(err)
 		}
 
 		if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -68,7 +68,7 @@ func (bpr *backupPlanRepository) CreateBackupPlan(ctx context.Context, backupPla
 
 	if err := tx.Commit(ctx); err != nil {
 		slog.Error("Erro ao fazer commit", "error", err)
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	return nil
@@ -99,7 +99,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 	rows, err := bpr.db.Query(ctx, query, id)
 	if err != nil {
 		slog.Error("Erro ao buscar plano de backup pelo id", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 	defer rows.Close()
 
@@ -124,7 +124,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 		)
 		if err != nil {
 			slog.Error("Erro ao buscar plano de backup pelo id", "error", err.Error())
-			return nil, handleDatabaseError(err)
+			return nil, handlePgDatabaseError(err)
 		}
 		bp.BackupSizeBytes = big.NewInt(backupSizeBytes)
 
@@ -144,7 +144,7 @@ func (bpr *backupPlanRepository) GetBackupPlanByID(ctx context.Context, id uuid.
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	if backupPlan == nil {
@@ -179,7 +179,7 @@ func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limi
 
 	rows, err := bpr.db.Query(ctx, query, limit, offset)
 	if err != nil {
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 	defer rows.Close()
 
@@ -203,7 +203,7 @@ func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limi
 			&wd.UpdatedAt,
 		)
 		if err != nil {
-			return nil, handleDatabaseError(err)
+			return nil, handlePgDatabaseError(err)
 		}
 
 		bp.BackupSizeBytes = big.NewInt(backupSizeBytes)
@@ -217,7 +217,7 @@ func (bpr *backupPlanRepository) ListBackupPlans(ctx context.Context, page, limi
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	if len(backupPlansMap) == 0 {
@@ -238,7 +238,7 @@ func (bpr *backupPlanRepository) UpdateBackupPlan(ctx context.Context, backupPla
 	tx, err := bpr.db.Begin(ctx)
 	if err != nil {
 		slog.Error("Erro ao iniciar transação", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -251,7 +251,7 @@ func (bpr *backupPlanRepository) UpdateBackupPlan(ctx context.Context, backupPla
 	result, err := tx.Exec(ctx, queryPlan, backupPlan.Name, backupPlan.BackupSizeBytes, backupPlan.DeviceID, now, backupPlan.ID)
 	if err != nil {
 		slog.Error("Erro ao atualizar na tabela plano de backup", "error", err)
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -263,7 +263,7 @@ func (bpr *backupPlanRepository) UpdateBackupPlan(ctx context.Context, backupPla
 	_, err = tx.Exec(ctx, queryDelete, backupPlan.ID)
 	if err != nil {
 		slog.Error("Erro ao deletar dias da semana existentes", "error", err)
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	queryInsert := `
@@ -275,13 +275,13 @@ func (bpr *backupPlanRepository) UpdateBackupPlan(ctx context.Context, backupPla
 		_, err := tx.Exec(ctx, queryInsert, backupPlan.ID, day.Day, day.TimeDay, day.CreatedAt, now)
 		if err != nil {
 			slog.Error("Erro ao inserir novo dia da semana", "error", err)
-			return handleDatabaseError(err)
+			return handlePgDatabaseError(err)
 		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		slog.Error("Erro ao fazer commit", "error", err)
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	return nil
@@ -291,23 +291,23 @@ func (bpr *backupPlanRepository) DeleteBackupPlan(ctx context.Context, id uuid.U
 	tx, err := bpr.db.Begin(ctx)
 	if err != nil {
 		slog.Error("Erro ao iniciar transação", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 	defer tx.Rollback(ctx)
 
 	_, err = tx.Exec(ctx, `DELETE FROM backup_plans_week_days WHERE backup_plan_id = $1`, id)
 	if err != nil {
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	_, err = tx.Exec(ctx, `DELETE FROM backup_plans WHERE id = $1`, id)
 	if err != nil {
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		slog.Error("Erro ao fazer commit", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	return nil

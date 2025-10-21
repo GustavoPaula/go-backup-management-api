@@ -30,7 +30,7 @@ func (dr *deviceRepository) CreateDevice(ctx context.Context, device *domain.Dev
 	result, err := dr.db.Exec(ctx, query, device.ID, device.Name, device.CustomerID, now, now)
 	if err != nil {
 		slog.Error("Erro ao criar dispositivo", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -62,7 +62,7 @@ func (dr *deviceRepository) GetDeviceByID(ctx context.Context, id uuid.UUID) (*d
 
 	if err != nil {
 		slog.Error("Erro ao buscar dispositivo pelo id", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	return &device, nil
@@ -89,7 +89,7 @@ func (dr *deviceRepository) GetDeviceByCustomerID(ctx context.Context, id uuid.U
 
 	if err != nil {
 		slog.Error("Erro ao buscar dispositivo pelo customer_id", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	return &device, nil
@@ -109,7 +109,7 @@ func (dr *deviceRepository) ListDevices(ctx context.Context, page, limit int) ([
 	rows, err := dr.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		slog.Error("Erro ao buscar os dispositivos", "error", err)
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 	defer rows.Close()
 
@@ -123,7 +123,7 @@ func (dr *deviceRepository) ListDevices(ctx context.Context, page, limit int) ([
 		)
 		if err != nil {
 			slog.Error("Erro ao obter a lista de dispositivos", "error", err.Error())
-			return nil, handleDatabaseError(err)
+			return nil, handlePgDatabaseError(err)
 		}
 
 		devices = append(devices, device)
@@ -142,12 +142,12 @@ func (dr *deviceRepository) UpdateDevice(ctx context.Context, device *domain.Dev
 	result, err := dr.db.Exec(ctx, query, device.Name, device.CustomerID, time.Now(), device.ID)
 	if err != nil {
 		slog.Error("Erro ao atualizar os dados do dispositivo", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
 		slog.Error("Nenhuma linha afetada ao atualizar dispositivo")
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	return nil
@@ -161,7 +161,7 @@ func (dr *deviceRepository) DeleteDevice(ctx context.Context, id uuid.UUID) erro
 	_, err := dr.db.Exec(ctx, query, id)
 	if err != nil {
 		slog.Error("Erro ao deletar os dados do dispositivo", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	return nil

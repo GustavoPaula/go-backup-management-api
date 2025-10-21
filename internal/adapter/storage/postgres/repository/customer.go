@@ -29,7 +29,7 @@ func (cr *customerRepository) CreateCustomer(ctx context.Context, customer *doma
 	`
 	result, err := cr.db.Exec(ctx, query, customer.ID, customer.Name, now, now)
 	if err != nil {
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -60,7 +60,7 @@ func (cr *customerRepository) GetCustomerByID(ctx context.Context, id uuid.UUID)
 
 	if err != nil {
 		slog.Error("Erro ao buscar cliente", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	return &customer, nil
@@ -86,7 +86,7 @@ func (cr *customerRepository) GetCustomerByName(ctx context.Context, name string
 
 	if err != nil {
 		slog.Error("Erro ao buscar cliente pelo nome", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 
 	return &customer, nil
@@ -106,7 +106,7 @@ func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int
 	rows, err := cr.db.Query(ctx, query, limit, offset)
 	if err != nil {
 		slog.Error("Erro ao buscar lista de clientes", "error", err.Error())
-		return nil, handleDatabaseError(err)
+		return nil, handlePgDatabaseError(err)
 	}
 	defer rows.Close()
 
@@ -119,7 +119,7 @@ func (cr *customerRepository) ListCustomers(ctx context.Context, page, limit int
 		)
 		if err != nil {
 			slog.Error("Erro ao retornar a lista de clientes", "error", err.Error())
-			return nil, handleDatabaseError(err)
+			return nil, handlePgDatabaseError(err)
 		}
 
 		customers = append(customers, customer)
@@ -139,7 +139,7 @@ func (cr *customerRepository) UpdateCustomer(ctx context.Context, customer *doma
 	result, err := cr.db.Exec(ctx, query, customer.Name, now, customer.ID)
 	if err != nil {
 		slog.Error("Erro ao atualizar os dados do clientes", "error", err.Error())
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	if rowsAffected := result.RowsAffected(); rowsAffected == 0 {
@@ -158,7 +158,7 @@ func (cr *customerRepository) DeleteCustomer(ctx context.Context, id uuid.UUID) 
 	_, err := cr.db.Exec(ctx, query, id)
 	if err != nil {
 		slog.Error("Erro ao deletar cliente", "error", err)
-		return handleDatabaseError(err)
+		return handlePgDatabaseError(err)
 	}
 
 	return nil

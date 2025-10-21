@@ -3,14 +3,9 @@ package domain
 import "errors"
 
 var (
-	ErrForeignKeyViolation         = errors.New("ERR_FOREIGN_KEY_VIOLATION")
-	ErrDeadlock                    = errors.New("ERR_DEADLOCK")
-	ErrTransactionConflict         = errors.New("ERR_TRANSACTION_CONFLICT")
-	ErrLockNotAvailable            = errors.New("ERR_LOCK_NOT_AVAILABLE")
-	ErrPermissionDenied            = errors.New("ERR_PERMISSION_DENIED")
-	ErrDatabaseUnavailable         = errors.New("ERR_DATABASE_UNAVAILABLE")
 	ErrBadRequest                  = errors.New("ERR_BAD_REQUEST")
 	ErrServiceUnavailable          = errors.New("ERR_SERVICE_UNAVAILABLE")
+	ErrForbidden                   = errors.New("ERR_FORBIDDEN")
 	ErrInternal                    = errors.New("ERR_INTERNAL_ERROR")
 	ErrDataNotFound                = errors.New("ERR_DATA_NOT_FOUND")
 	ErrConflictingData             = errors.New("ERR_CONFLICTING_DATA")
@@ -24,5 +19,4 @@ var (
 	ErrInvalidAuthorizationHeader  = errors.New("ERR_INVALID_AUTH_HEADER")
 	ErrInvalidAuthorizationType    = errors.New("ERR_INVALID_AUTH_TYPE")
 	ErrInvalidAuthorizationPayload = errors.New("ERR_INVALID_AUTH_PAYLOAD")
-	ErrForbidden                   = errors.New("ERR_FORBIDDEN")
 )
