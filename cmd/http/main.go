@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/auth/paseto"
+	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/auth/jwt"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/config"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/handler"
 	"github.com/GustavoPaula/go-backup-management-api/internal/adapter/http/router"
@@ -37,9 +37,10 @@ func main() {
 	}
 	defer db.Close()
 
-	token, err := paseto.New(config.Token)
+	//pasetoToken, err := paseto.New(config.Token)
+	token, err := jwt.New(config.Token)
 	if err != nil {
-		slog.Error("Erro ao iniciar o serviço do token", "error", err)
+		slog.Error("Erro ao iniciar o serviço do paseto token", "error", err)
 		os.Exit(1)
 	}
 

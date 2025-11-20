@@ -11,6 +11,7 @@ var (
 	ErrConflictingData             = errors.New("ERR_CONFLICTING_DATA")
 	ErrInvalidCredentials          = errors.New("ERR_INVALID_CREDENTIALS")
 	ErrUnauthorized                = errors.New("ERR_UNAUTHORIZED")
+	ErrTokenRequired               = errors.New("ERR_TOKEN_REQUIRED")
 	ErrTokenCreation               = errors.New("ERR_TOKEN_CREATION_ERROR")
 	ErrTokenDuration               = errors.New("ERR_TOKEN_DURATION_ERROR")
 	ErrExpiredToken                = errors.New("ERR_EXPIRED_TOKEN")
