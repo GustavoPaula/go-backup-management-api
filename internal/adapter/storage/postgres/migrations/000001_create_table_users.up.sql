@@ -2,6 +2,7 @@ CREATE TYPE "users_role_enum" AS ENUM ('admin', 'member');
 
 CREATE TABLE "users" (
     "id" uuid  PRIMARY KEY NOT NULL  DEFAULT gen_random_uuid(),
+    "fullname" varchar NOT NULL,
     "email" varchar NOT NULL,
     "username" varchar NOT NULL,
     "password" varchar NOT NULL,
@@ -12,9 +13,10 @@ CREATE TABLE "users" (
 
 CREATE UNIQUE INDEX "email" ON "users" ("email");
 
-INSERT INTO users (id, email, username, password, role, created_at, updated_at)
+INSERT INTO users (id, fullname, email, username, password, role, created_at, updated_at)
 VALUES (
-  gen_random_uuid(), 
+  gen_random_uuid(),
+  'Administrador',
   'admin@admin.com', 
   'admin', 
   '$2a$10$wvyY/NTJ4PYnxpx8MhrGO.wWHRjwKAbNUUbSXTMkzeWxBMx8oS9K.', 

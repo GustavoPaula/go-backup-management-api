@@ -40,7 +40,7 @@ func main() {
 	//pasetoToken, err := paseto.New(config.Token)
 	token, err := jwt.New(config.Token)
 	if err != nil {
-		slog.Error("Erro ao iniciar o serviço do paseto token", "error", err)
+		slog.Error("Erro ao iniciar o serviço do JWT token", "error", err)
 		os.Exit(1)
 	}
 

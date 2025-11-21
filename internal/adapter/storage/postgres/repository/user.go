@@ -25,10 +25,10 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 	now := time.Now()
 
 	query := `
-		INSERT INTO users (id, username, email, password, role, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (id, fullname, email, username, password, role, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
-	result, err := ur.db.Exec(ctx, query, user.ID, user.Username, user.Email, user.Password, user.Role, now, now)
+	result, err := ur.db.Exec(ctx, query, user.ID, user.Fullname, user.Email, user.Username, user.Password, user.Role, now, now)
 	if err != nil {
 		slog.Error("Erro ao inserir usuário", "error", err.Error())
 		return handlePgDatabaseError(err)
@@ -45,14 +45,15 @@ func (ur *userRepository) CreateUser(ctx context.Context, user *domain.User) err
 func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	var user domain.User
 	query := `
-		SELECT id, username, email, password, role, created_at, updated_at
+		SELECT id, fullname, email, username, password, role, created_at, updated_at
 		FROM users
 		WHERE id = $1
 	`
 	err := ur.db.QueryRow(ctx, query, id).Scan(
 		&user.ID,
-		&user.Username,
+		&user.Fullname,
 		&user.Email,
+		&user.Username,
 		&user.Password,
 		&user.Role,
 		&user.CreatedAt,
@@ -74,14 +75,15 @@ func (ur *userRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domai
 func (ur *userRepository) GetUserByUsername(ctx context.Context, username string) (*domain.User, error) {
 	var user domain.User
 	query := `
-		SELECT id, username, email, password, role, created_at, updated_at
+		SELECT id, fullname, email, username, password, role, created_at, updated_at
 		FROM users
 		WHERE username = $1
 	`
 	err := ur.db.QueryRow(ctx, query, username).Scan(
 		&user.ID,
-		&user.Username,
+		&user.Fullname,
 		&user.Email,
+		&user.Username,
 		&user.Password,
 		&user.Role,
 		&user.CreatedAt,
@@ -103,14 +105,15 @@ func (ur *userRepository) GetUserByUsername(ctx context.Context, username string
 func (ur *userRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
 	query := `
-		SELECT id, username, email, password, role, created_at, updated_at
+		SELECT id, fullname, email, username, password, role, created_at, updated_at
 		FROM users
 		WHERE email = $1
 	`
 	err := ur.db.QueryRow(ctx, query, email).Scan(
 		&user.ID,
-		&user.Username,
+		&user.Fullname,
 		&user.Email,
+		&user.Username,
 		&user.Password,
 		&user.Role,
 		&user.CreatedAt,
@@ -135,7 +138,7 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 	offset := (page - 1) * limit
 
 	query := `
-		SELECT id, email, username, password, role, created_at, updated_at
+		SELECT id, fullname, email, username, password, role, created_at, updated_at
 		FROM users
 		ORDER BY username
 		LIMIT $1 OFFSET $2
@@ -150,6 +153,7 @@ func (ur *userRepository) ListUsers(ctx context.Context, page, limit int) ([]dom
 	for rows.Next() {
 		err := rows.Scan(
 			&user.ID,
+			&user.Fullname,
 			&user.Email,
 			&user.Username,
 			&user.Password,
@@ -172,10 +176,10 @@ func (ur *userRepository) UpdateUser(ctx context.Context, user *domain.User) err
 	now := time.Now()
 	query := `
 		UPDATE users
-		SET username = $1, email = $2, password = $3, role = $4, updated_at = $5
-		WHERE id = $6
+		SET fullname = $1, email = $2, username = $3, password = $4, role = $5, updated_at = $6
+		WHERE id = $7
 	`
-	result, err := ur.db.Exec(ctx, query, user.Username, user.Email, user.Password, user.Role, now, user.ID)
+	result, err := ur.db.Exec(ctx, query, user.Fullname, user.Email, user.Username, user.Password, user.Role, now, user.ID)
 	if err != nil {
 		slog.Error("Erro ao atualizar o usuário", "error", err.Error())
 		return handlePgDatabaseError(err)

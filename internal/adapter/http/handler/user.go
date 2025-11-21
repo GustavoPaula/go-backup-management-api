@@ -44,6 +44,7 @@ func (uh *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	user := domain.User{
 		ID:       uuid.New(),
+		Fullname: req.Fullname,
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
@@ -75,6 +76,7 @@ func (uh *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	res := dto.UserResponse{
 		ID:        user.ID,
 		Email:     user.Email,
+		Fullname:  user.Fullname,
 		Username:  user.Username,
 		Role:      string(user.Role),
 		CreatedAt: user.CreatedAt,
@@ -115,6 +117,7 @@ func (uh *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	for _, user := range users {
 		list = append(list, dto.UserResponse{
 			ID:        user.ID,
+			Fullname:  user.Fullname,
 			Email:     user.Email,
 			Username:  user.Username,
 			Role:      string(user.Role),
@@ -148,8 +151,9 @@ func (uh *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	user := domain.User{
 		ID:       id,
-		Username: req.Username,
+		Fullname: req.Fullname,
 		Email:    req.Email,
+		Username: req.Username,
 		Password: req.Password,
 		Role:     domain.UserRole(req.Role),
 	}
