@@ -27,7 +27,6 @@ func New(config *config.Token) (port.TokenService, error) {
 		return nil, domain.ErrTokenRequired
 	}
 
-	// Configurar tempo de expiração (opcional)
 	durationStr := config.Duration
 	duration, err := time.ParseDuration(durationStr)
 	if err != nil {
@@ -45,7 +44,6 @@ func (j *JwtToken) CreateToken(user *domain.User) (string, error) {
 		return "", domain.ErrDataNotFound
 	}
 
-	// Gerar ID único para o token
 	tokenID := uuid.New()
 
 	claims := jwtClaims{
@@ -73,8 +71,7 @@ func (j *JwtToken) CreateToken(user *domain.User) (string, error) {
 }
 
 func (j *JwtToken) VerifyToken(tokenString string) (*domain.TokenPayload, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (interface{}, error) {
-		// Verificar o método de assinatura
+	token, err := jwt.ParseWithClaims(tokenString, &jwtClaims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, domain.ErrInvalidToken
 		}
@@ -90,29 +87,8 @@ func (j *JwtToken) VerifyToken(tokenString string) (*domain.TokenPayload, error)
 		return nil, domain.ErrInvalidToken
 	}
 
-	// Verificar se o token expirou
 	if time.Now().After(claims.ExpiresAt.Time) {
 		return nil, domain.ErrExpiredToken
-	}
-
-	return &domain.TokenPayload{
-		ID:     claims.ID,
-		UserID: claims.UserID,
-		Role:   claims.Role,
-	}, nil
-}
-
-// Método adicional para extrair informações do token sem verificar (útil para debugging)
-func (j *JwtToken) ParseTokenWithoutVerification(tokenString string) (*domain.TokenPayload, error) {
-	parser := jwt.NewParser(jwt.WithoutClaimsValidation())
-	token, _, err := parser.ParseUnverified(tokenString, &jwtClaims{})
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(*jwtClaims)
-	if !ok {
-		return nil, domain.ErrInvalidToken
 	}
 
 	return &domain.TokenPayload{
