@@ -37,7 +37,6 @@ func main() {
 	}
 	defer db.Close()
 
-	//pasetoToken, err := paseto.New(config.Token)
 	token, err := jwt.New(config.Token)
 	if err != nil {
 		slog.Error("Erro ao iniciar o serviço do JWT token", "error", err)

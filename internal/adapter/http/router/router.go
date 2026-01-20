@@ -40,12 +40,8 @@ func NewRouter(
 	}))
 	r.Use(middleware.RequestID, middleware.Recoverer)
 
-	// Rota de Health
 	r.Get("/health", healthyHandler.Health)
-
-	// Rotas de usuários
 	r.Post("/login", authHandler.Login)
-
 	r.Group(func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware(token))
 		r.Post("/register", userHandler.Register)
