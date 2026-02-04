@@ -26,7 +26,6 @@ type HTTP struct {
 
 type Token struct {
 	Duration     string
-	KeyHex       string
 	JwtSecretKey string
 }
 
@@ -49,7 +48,6 @@ func New() (*Config, error) {
 
 	token := &Token{
 		Duration:     os.Getenv("TOKEN_DURATION"),
-		KeyHex:       os.Getenv("PASETO_SYMMETRIC_KEY"),
 		JwtSecretKey: os.Getenv("JWT_SECRET_KEY"),
 	}
 
